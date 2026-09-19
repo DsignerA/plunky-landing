@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Plunky Selectors sponsorship calendar" />
+  <title>Plunky Selectors — Sponsorship Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">PLUNKY<br><span>SELECTORS</span></div>
+        <div class="brand-sub">MUSIC • PEOPLE • CULTURE</div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item">⌂ <span>Dashboard</span></button>
+        <button class="nav-item active">▦ <span>Sponsorship Calendar</span></button>
+        <button class="nav-item">◇ <span>Opportunities</span></button>
+        <button class="nav-item">◎ <span>Sponsors</span></button>
+        <button class="nav-item">▤ <span>Campaign Details</span></button>
+      </nav>
+
+      <div class="sidebar-section">
+        <div class="section-title">FILTER OPPORTUNITIES</div>
+        <div id="typeFilters" class="filters"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="crown">♛</div>
+        <strong>REAL MUSIC.<br>REAL PEOPLE.<br>BIGGER TOMORROW.</strong>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">PLUNKY SELECTORS</p>
+          <h1>Sponsorship Calendar</h1>
+          <p class="subtitle">Select a moment, own a sound, support the culture.</p>
+        </div>
+        <div class="campaign-chip">12-WEEK CAMPAIGN</div>
+      </header>
+
+      <section class="stats">
+        <div class="stat"><span>Total opportunities</span><strong id="statTotal">0</strong></div>
+        <div class="stat"><span>Booked</span><strong id="statBooked">0</strong></div>
+        <div class="stat"><span>Available</span><strong id="statAvailable">0</strong></div>
+        <div class="stat"><span>Campaign weeks</span><strong>12</strong></div>
+      </section>
+
+      <div class="content-grid">
+        <section class="calendar-card">
+          <div class="calendar-toolbar">
+            <div class="month-controls">
+              <button id="prevMonth" class="icon-btn">‹</button>
+              <h2 id="monthTitle"></h2>
+              <button id="nextMonth" class="icon-btn">›</button>
+            </div>
+            <div class="view-toggle" aria-label="Calendar view">
+              <button class="active">Month</button>
+              <button id="todayBtn">Today</button>
+            </div>
+          </div>
+
+          <div class="weekday-row">
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+
+          <div class="legend" id="legend"></div>
+        </section>
+
+        <aside class="detail-panel" id="detailPanel">
+          <div class="detail-hero">
+            <div class="pill" id="detailStatus">Available</div>
+            <p class="eyebrow">ROUND 01: OPEN FLIP</p>
+            <h2 id="detailTitle">Select a sponsorship</h2>
+            <p id="detailDate">Choose any available calendar slot to see details.</p>
+          </div>
+
+          <div class="detail-body">
+            <div class="detail-block">
+              <span class="label">Opportunity type</span>
+              <strong id="detailType">—</strong>
+            </div>
+            <div class="detail-block">
+              <span class="label">What you own</span>
+              <p id="detailDescription">Your brand becomes part of a creative moment in the Plunky Selectors campaign.</p>
+            </div>
+            <div class="detail-block">
+              <span class="label">Includes</span>
+              <ul id="detailBenefits">
+                <li>Brand placement on the campaign moment</li>
+                <li>Social mention in supporting content</li>
+                <li>Campaign calendar recognition</li>
+              </ul>
+            </div>
+            <div class="price-row">
+              <div>
+                <span class="label">Starting at</span>
+                <strong id="detailPrice">$250</strong>
+              </div>
+              <button id="selectBtn" class="primary-btn" disabled>Select sponsorship</button>
+            </div>
+          </div>
+
+          <div class="track-pool">
+            <div class="track-header">
+              <div>
+                <p class="eyebrow">WEEK 1</p>
+                <h3>Open Flip Track Pool</h3>
+              </div>
+              <span>12 tracks</span>
+            </div>
+            <ol id="trackList"></ol>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
