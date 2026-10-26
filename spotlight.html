@@ -655,6 +655,7 @@ body{padding:0}
   const total = slides.length;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let current = 0, autoplay = null;
+  const defaultPhoto = document.querySelector('.js-main-photo').getAttribute('src');
   const motion = ['is-entering', 'is-exiting', 'from-left', 'from-right', 'to-left', 'to-right'];
   const updateText = (selector, value) => document.querySelectorAll(selector).forEach(el => { el.textContent = value; });
 
@@ -701,13 +702,17 @@ body{padding:0}
     const d = e.data;
     if ('djName' in d) updateText('.js-dj-name', d.djName || 'your DJ name');
     if ('handle' in d) updateText('.js-dj-handle', '@' + (d.handle || 'yourhandle'));
+    if ('category' in d) updateText('.js-secondary-title', d.category || 'DJ Spotlight');
+    if ('photo' in d) document.querySelectorAll('.js-main-photo').forEach(img => { img.src = d.photo || defaultPhoto; });
+    if ('slide' in d) { stopAutoplay(); showSlide(d.slide); }
     if ('active' in d) {
       stopAutoplay();
       if (d.active && !reduced) autoplay = setInterval(() => showSlide(current + 1, 1), 4200);
     }
   });
   // Tell the parent page how tall the card is so it can size and scale the frame.
-  const report = () => parent.postMessage({ type: 'gm-spotlight-height', height: document.documentElement.scrollHeight }, location.origin);
+  // Measure the card itself: the document's scrollHeight never drops below the frame height.
+  const report = () => parent.postMessage({ type: 'gm-spotlight-height', height: Math.ceil(document.querySelector('.instagram-card').getBoundingClientRect().height) }, location.origin);
   new ResizeObserver(report).observe(document.body);
   addEventListener('load', report);
   showSlide(0);

@@ -14,24 +14,25 @@ const buttons=[];
 for(let i=1;i<=12;i++){
  const n=String(i).padStart(2,'0'),button=document.createElement('button');button.className='track';const title=titles[i-1],short=title.replace(' (45 Version Parts 1 & 2)',' (45)');button.setAttribute('aria-label',`Select track ${n}: ${title}`);
  button.innerHTML=`<div class="record photo"><img src="assets/vinyl.webp" alt="" width="720" height="720" decoding="async"></div><div class="track-meta"><span><small>${n}</small>${short}</span><span>↗︎</span></div>`;
- button.onclick=()=>{chosen=i;confirmed=false;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';$('#signup').hidden=false;$('#confirmation').hidden=true;buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));stopDeck();jump(.76);render()};tracks.append(button);button._meta=button.querySelector('.track-meta');buttons.push(button)
+ button.onclick=()=>{chosen=i;confirmed=false;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';closeFinal();buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));stopDeck();jump(.76);render()};tracks.append(button);button._meta=button.querySelector('.track-meta');buttons.push(button)
 }
 // Scroll sets a target; drawn progress eases toward it each frame, which evens out
 // irregular mobile scroll events. Reduced motion draws the target directly.
-let shown=null;
+let shown=null,finalT=0,finalShown=0;
 const target=()=>clamp((window.scrollY-journey.offsetTop)/(journey.offsetHeight-stage.offsetHeight));
 function render(){if(!queued){queued=true;requestAnimationFrame(tick)}}
 function tick(){
  const t=target();
  shown=shown===null||reduced.matches||Math.abs(t-shown)<.0005?t:shown+(t-shown)*.28;
+ finalShown=reduced.matches||Math.abs(finalT-finalShown)<.002?finalT:finalShown+(finalT-finalShown)*.14;
  draw(shown);
- if(shown!==t)requestAnimationFrame(tick);else queued=false;
+ if(shown!==t||finalShown!==finalT)requestAnimationFrame(tick);else queued=false;
 }
 const chapterNo=$('#chapterNo'),chapterText=$('#chapterText'),chapter=$('.chapter'),scrollcue=$('.scrollcue'),progress=$('#progress'),collectionTitle=$('.collection-title'),demoNote=$('.demo-note'),navButtons=[...document.querySelectorAll('.scene-nav button')];
 const setText=(el,v)=>{if(el.textContent!==v)el.textContent=v};
 function draw(p){
  const mobile=innerWidth<701;
- const pull=ease(p/.22),remove=ease((p-.2)/.17),spread=ease((p-.33)/.14),select=ease((p-.63)/.12),form=ease((p-.79)/.08);
+ const pull=ease(p/.22),remove=ease((p-.2)/.17),spread=ease((p-.33)/.14),select=ease((p-.63)/.12),form=ease((p-.79)/.06),glassIn=ease((p-.86)/.06);
  const selected=chosen!==null;
  const bounds=tracks.getBoundingClientRect(),stageW=stage.clientWidth,stageH=stage.clientHeight,vw=stageW,vh=stageH,cols=mobile?3:4,rows=mobile?4:3;
  sleeve.style.transform=`translateX(${-remove*125}%) rotateY(${-15-pull*8-remove*20}deg) rotateZ(${-7-remove*13}deg)`;sleeve.style.opacity=1-remove;
@@ -55,7 +56,8 @@ function draw(p){
  // The selected record remains in the same stage while its form arrives.
  if(selected&&p>=.66){collection.inert=false;collection.style.pointerEvents='none';}
  show(selectedInfo,selected?select*(1-form):0,selected&&p>=.68&&p<.83);
- show(signupPanel,selected?form:0,selected&&p>=.84);{const a=selected&&p>=.84;if(a!==spotActive){spotActive=a;if(typeof toSpot==='function')toSpot({active:a})}}
+ if(finalT&&p<.84)closeFinal();
+ placeJoin(selected?form:0,selected?glassIn:0,mobile,vw,vh);
  show(needTrack,!selected?select:0,!selected&&p>=.7);
  if(deckOn&&p<.64)stopDeck();
  const phase=p<.2?0:p<.4?1:p<.66?2:p<.84?3:4;
@@ -64,12 +66,14 @@ function draw(p){
  chapter.style.opacity=p>.39?0:1;scrollcue.style.opacity=p>.42?0:1;progress.style.transform=`scaleX(${p})`;
  navButtons.forEach((b,i)=>b.classList.toggle('active',i===(p<.4?0:p<.8?1:2)));
 }
-addEventListener('scroll',render,{passive:true});addEventListener('resize',render);
+addEventListener('scroll',render,{passive:true});
+// Older Safari lacks overflow:clip; undo any focus-driven scroll of the pinned stage.
+stage.addEventListener('scroll',()=>{if(stage.scrollTop||stage.scrollLeft){stage.scrollTop=0;stage.scrollLeft=0}});addEventListener('resize',render);
 $('#exploreTracks').onclick=e=>{e.preventDefault();jump(.52)};
 document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>jump(Number(b.dataset.step)));
 document.querySelectorAll('.backTracks').forEach(b=>b.onclick=()=>jump(.52));$('.close').onclick=()=>jump(.52);
-$('#continueSignup').onclick=()=>jump(.91);
-$('#signup').onsubmit=e=>{e.preventDefault();const data=new FormData(e.target);$('#modalTitle').textContent=`${data.get('dj')}, you’re in the spotlight.`;$('#modalDescription').textContent=`${String(chosen).padStart(2,'0')} · ${titles[chosen-1]} / ${data.get('city')}`;$('#signup').hidden=true;$('#confirmation').hidden=false;confirmed=true;render()};$('#reset').onclick=()=>{stopDeck();jump(.52)};$('#backcoverPick').onclick=()=>jump(.52);
+$('#continueSignup').onclick=()=>jump(.93);
+$('#backcoverPick').onclick=()=>jump(.52);
 // Turntable: the selected record lands on the platter; play drops the tonearm and spins it.
 // With an approved audio file the arm tracks playback across the grooves.
 const deckSleeve=$('#deckSleeve'),deckBase=$('#deckBase'),deckTop=$('#deckTop'),deckPlay=$('#deckPlay'),deckStatus=$('#deckStatus'),player=new Audio();
@@ -99,22 +103,66 @@ player.addEventListener('timeupdate',()=>{if(deckOn&&player.duration)setArm(ARM_
 player.addEventListener('ended',stopDeck);
 deckPlay.onclick=()=>deckOn?stopDeck():startDeck();
 $('#onDeck').onclick=stopDeck;
-// DJ Spotlight post (same card as /groove-makers/dj/), updated live from the form.
-const spotlight=$('#spotlight'),spotFrame=$('#spotlightFrame'),signup=$('#signup');
-let spotHeight=0,spotActive=null;
+// Join step. 1) The DJ Spotlight post (same card as /groove-makers/dj/) arrives large.
+// 2) A frosted glass panel with the form slides over it; the form drives the post live.
+// 3) Submitting brings the finished post forward as the final view.
+const spotStage=$('#spotStage'),spotlight=$('#spotlight'),spotFrame=$('#spotlightFrame'),signup=$('#signup'),finalBar=$('#confirmation');
+let spotHeight=640,spotActive=null,photoURL=null;
 const toSpot=msg=>{try{spotFrame.contentWindow.postMessage({type:'gm-spotlight',...msg},location.origin)}catch(e){}};
-function sizeSpotlight(){
- if(!spotHeight)return;
- const mobile=innerWidth<701,base=400,avail=spotlight.parentElement.clientWidth;
- const maxW=mobile?Math.min(avail,stage.clientHeight*.3*base/spotHeight):Math.min(avail,440),maxH=mobile?stage.clientHeight*.3:signupPanel.clientHeight-10;
- const s=Math.min(maxW/base,maxH/spotHeight);
- spotFrame.style.height=spotHeight+'px';spotFrame.style.transform=`scale(${s})`;
- spotlight.style.width=base*s+'px';spotlight.style.setProperty('--s',s);spotlight.style.height=spotHeight*s+'px';
+const lerp=(a,b,t)=>a+(b-a)*t;
+function placeJoin(cardIn,glassIn,mobile,vw,vh){
+ const H=spotHeight,B=400,g=glassIn*(1-finalShown),f=finalShown,top=mobile?72:96,bottom=mobile?64:80;
+ // Card size and centre for each layout: large, behind the glass, final.
+ const big={s:mobile?Math.min(vw*.86/B,(vh-top-bottom-16)/H):Math.min(1.2,(vh-top-bottom-30)/H)};
+ big.x=vw/2;big.y=top+(vh-top-bottom)/2;
+ const gl={s:mobile?Math.min(vw*.6/B,vh*.33/H):big.s*.94};
+ gl.x=mobile?vw/2:vw/2-Math.min(170,vw*.12);gl.y=mobile?top+6+H*gl.s/2:big.y;
+ const fin={s:mobile?Math.min(vw*.78/B,(vh-top-250)/H):big.s};
+ fin.x=mobile?vw/2:vw*.4;fin.y=mobile?top+6+H*fin.s/2:big.y;
+ const k=['s','x','y'].reduce((o,key)=>(o[key]=lerp(lerp(big[key],gl[key],glassIn),fin[key],f),o),{});
+ const w=B*k.s,h=H*k.s;
+ spotFrame.style.transform=`scale(${k.s})`;spotlight.style.setProperty('--s',k.s);
+ spotlight.style.width=w+'px';spotlight.style.height=h+'px';
+ spotStage.style.transform=`translate(${k.x-w/2}px,${k.y-h/2+(1-cardIn)*40}px)`;spotStage.style.opacity=cardIn;
+ spotStage.inert=!(cardIn>.9&&(g<.4||f>.9));
+ // Glass panel: bottom sheet on phones; on desktop it overlaps the post's right side.
+ if(mobile)signupPanel.style.transform=`translateY(${(1-g)*105}%)`;
+ else signupPanel.style.transform=`translate(${k.x+w*.18+(1-g)*70}px,-50%)`;
+ show(signupPanel,mobile?(g>0?1:0):g,g>.9);
+ show(finalBar,f,f>.9);
+ stage.classList.toggle('sheet-up',mobile&&g>.05);
+ // The post rotates its slides while nobody is filling in the form.
+ const a=cardIn>.9&&(glassIn<.2||finalT===1);
+ if(a!==spotActive){spotActive=a;toSpot({active:a})}
 }
-addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.type==='gm-spotlight-height'){spotHeight=e.data.height;sizeSpotlight();syncSpotlight()}});
-addEventListener('resize',sizeSpotlight);
-function syncSpotlight(){toSpot({djName:signup.dj.value.trim(),handle:signup.instagram.value.replace(/^@+/,'').replace(/\s+/g,'')})}
-signup.addEventListener('input',e=>{if(e.target.name==='instagram')e.target.value=e.target.value.replace(/^@+/,'').replace(/\s+/g,'');syncSpotlight()});
+addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.type==='gm-spotlight-height'){spotHeight=e.data.height;spotFrame.style.height=spotHeight+'px';syncSpotlight();render()}});
+const cleanHandle=v=>v.replace(/^@+/,'').replace(/\s+/g,'');
+function syncSpotlight(){toSpot({djName:signup.dj.value.trim(),handle:cleanHandle(signup.instagram.value),category:signup.category.value})}
+signup.addEventListener('input',e=>{if(e.target.name==='instagram')e.target.value=cleanHandle(e.target.value);if(e.target.name!=='photo')syncSpotlight();$('#formError').hidden=true});
+// Fields that change the artwork bring its slide into view.
+signup.addEventListener('focusin',e=>{if(['category','photo'].includes(e.target.name))toSpot({slide:0})});
+signup.category.addEventListener('change',()=>{toSpot({slide:0});syncSpotlight()});
+signup.photo.addEventListener('change',()=>{
+ const file=signup.photo.files[0],label=$('#photoLabel');
+ if(!file)return;
+ if(!file.type.startsWith('image/')){label.textContent='Choose an image';return}
+ if(file.size>12*1024*1024){label.textContent='Under 12 MB please';return}
+ if(photoURL)URL.revokeObjectURL(photoURL);
+ photoURL=URL.createObjectURL(file);label.textContent='✓ '+(file.name.length>16?file.name.slice(0,14)+'…':file.name);
+ toSpot({photo:photoURL,slide:0});
+});
+signup.onsubmit=e=>{
+ e.preventDefault();
+ const bad=[...signup.querySelectorAll('input[required]')].find(i=>!i.checkValidity());
+ if(bad){const err=$('#formError');err.textContent=bad.name==='email'&&bad.value?'Please enter a valid email.':`Please add your ${{dj:'DJ name',email:'email',city:'city or country'}[bad.name]}.`;err.hidden=false;bad.focus({preventScroll:true});return}
+ const d=new FormData(signup);
+ $('#finalTitle').textContent=`${d.get('dj')}, this is your spotlight.`;
+ $('#finalNote').textContent=`${String(chosen).padStart(2,'0')} · ${titles[chosen-1]} · ${d.get('city')}. Preview only. Your entry is not registered yet.`;
+ finalBar.hidden=false;confirmed=true;finalT=1;toSpot({slide:0});document.activeElement.blur();setTimeout(()=>$('#editDetails').focus({preventScroll:true}),600);render();
+};
+function closeFinal(){if(!finalT&&finalBar.hidden)return;finalT=0;confirmed=false;spotActive=null;setTimeout(()=>{if(!finalT)finalBar.hidden=true},700);render()}
+$('#editDetails').onclick=()=>{closeFinal();setTimeout(()=>signup.dj.focus({preventScroll:true}),450)};
+$('#reset').onclick=()=>{stopDeck();closeFinal();jump(.52)};
 setArm(ARM_REST);
 // The shared host occasionally drops a request under load: retry an image once.
 document.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{if(!img.dataset.retried){img.dataset.retried=1;setTimeout(()=>{img.src=img.src.split('?')[0]+'?r='+Date.now()},700)}}));

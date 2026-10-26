@@ -90,3 +90,54 @@ button,a{-webkit-tap-highlight-color:transparent}
 .intro h1{font-family:'Bricolage Grotesque','DM Sans',sans-serif;font-weight:800;font-optical-sizing:auto;letter-spacing:-.035em;line-height:1.04;color:var(--ink)}
 .intro h1 em{font-style:normal;font-weight:800;color:var(--wine)}
 @media(max-width:700px){.intro h1{font-size:clamp(40px,11.5vw,50px);letter-spacing:-.03em;line-height:1.05;overflow-wrap:normal;hyphens:none}}
+
+/* Join step: large post, frosted glass form over it, then the final view. */
+.spot-stage{position:absolute;left:0;top:0;z-index:7;opacity:0;will-change:transform,opacity}
+.spot-stage .spotlight{position:relative;margin:0;border-radius:calc(14px * var(--s,1));box-shadow:0 30px 70px #29170d4d,0 4px 12px #29170d24;overflow:hidden}
+.signup-panel.glass{position:absolute;inset:auto;left:0;top:50%;width:min(420px,34vw);display:block;padding:34px 34px 26px;z-index:8;border-radius:22px;background:linear-gradient(155deg,#fffaf2b3,#f4e9d68c);-webkit-backdrop-filter:blur(24px) saturate(1.35);backdrop-filter:blur(24px) saturate(1.35);border:1px solid #ffffffb3;box-shadow:0 34px 90px #2a170d3d,inset 0 1px 0 #fff;will-change:transform,opacity;max-height:calc(100% - 150px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.signup-panel.glass::-webkit-scrollbar{display:none}
+.glass .modal-content{max-width:none}
+.glass .close{position:absolute;top:12px;right:14px;left:auto;font-size:22px;color:inherit;padding:6px}
+.glass .modal-content h2{font-size:clamp(30px,2.6vw,40px)}
+.glass input,.glass select{background:#fffaf2d9;border-color:#a48b6655}
+.glass label{margin:11px 0}
+.glass .primary{margin-top:16px;border-radius:2px}
+.field-row{display:grid;grid-template-columns:1.15fr 1fr;gap:12px}
+.field-row label{margin:11px 0}
+select{display:block;width:100%;margin-top:7px;padding:11px 32px 11px 11px;border:1px solid #a48b6666;border-radius:0;font:12px 'DM Sans',sans-serif;color:var(--ink);-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23622922' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+select:focus{outline:2px solid #b95027}
+.photo-btn{position:relative;display:flex;align-items:center;justify-content:center;margin-top:7px;height:40px;border:1px dashed #a48b66aa;background:#fffaf280;font-size:11px;font-weight:600;color:#80503a;cursor:pointer;overflow:hidden;white-space:nowrap}
+.photo-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0;padding:0}
+.photo-btn:focus-within{outline:2px solid #b95027}
+.form-error{margin:8px 0 0;font-size:11px;color:#a2321a}
+.final-bar{position:absolute;z-index:8;right:8%;top:50%;transform:translateY(-50%);width:min(380px,30vw);opacity:0}
+.final-bar h2{font-size:clamp(34px,3.2vw,50px);line-height:1.05}
+.final-bar #finalNote{font-size:13px;line-height:1.7;color:#76634e;margin:18px 0 0}
+.final-actions{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-top:24px}
+.final-actions .primary{width:auto;padding:14px 26px}
+.final-actions .secondary{padding:10px 0}
+@media(max-width:700px){
+ .signup-panel.glass{top:auto;bottom:0;left:0;right:0;width:auto;max-height:64%;border-radius:24px 24px 0 0;padding:14px 22px 22px;border-bottom:0}
+ .signup-panel.glass::before{content:'';display:block;width:38px;height:4px;border-radius:2px;background:#281d1733;margin:0 auto 10px}
+ .glass .close{top:8px;right:10px}
+ .glass .modal-content .eyebrow{display:none}
+ .glass .modal-content h2{font-size:26px}
+ .glass .modal-content>p{font-size:11px;margin:6px 0 4px}
+ .glass label{margin:9px 0;font-size:9px}
+ .glass input,.glass select{padding:10px;margin-top:4px;font-size:16px}
+ .photo-btn{height:38px;margin-top:4px}
+ .glass .primary{padding:13px;margin-top:12px}
+ .final-bar{left:7%;right:7%;width:auto;top:auto;bottom:62px;transform:none;text-align:center}
+ .final-bar .eyebrow{margin-bottom:8px}
+ .final-bar h2{font-size:26px}
+ .final-bar #finalNote{font-size:11px;margin-top:8px;line-height:1.5}
+ .final-actions{align-items:center;margin-top:12px;gap:0}
+ .final-actions .primary{padding:12px 22px}
+}
+
+/* Nothing may widen the page (a focused field would scroll it sideways); clip keeps sticky working. */
+html,body{overflow-x:clip}
+@media(min-width:701px){#journey{height:380vh}}
+/* Focus can scroll an overflow:hidden box; clip can't be scrolled, so the pinned scene never shifts. */
+.stage{overflow:clip}
+.scene-nav{transition:opacity .3s}.sheet-up .scene-nav{opacity:0;pointer-events:none}
