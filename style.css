@@ -182,3 +182,13 @@ html,body{overflow-x:clip}
 
 /* Hero record sits a little smaller and higher so it never shows below the tilted sleeve. */
 .big{inset:6% 4% 8% 6%}
+/* iOS Safari renders filter:drop-shadow on 3D-transformed images as a flat rectangle.
+   Shadows come from box-shadow layers that follow the shapes instead. */
+.big img,.sleeve.art img{filter:none}
+.big::before{content:'';position:absolute;inset:2%;border-radius:50%;box-shadow:8px 16px 26px #29170d59;pointer-events:none}
+.sleeve.art::before{content:'';position:absolute;inset:6.5% 4% 4% 7%;box-shadow:6px 16px 26px #3824105c,1px 2px 4px #38241040;pointer-events:none;z-index:-1}
+.sleeve.art{transform-style:flat}
+/* Shadows are baked into the cover/record images (padded 8% each side), so no CSS
+   shadow or filter touches the 3D-tilted elements; Safari then draws no box. */
+.big::before,.sleeve.art::before{display:none}
+.big img,.sleeve.art img{position:absolute;left:-8%;top:-8%;width:116%;height:116%;max-width:none;filter:none}
