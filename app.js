@@ -222,21 +222,26 @@ Promise.all([
   h1.style.height=Math.ceil(LINES[0].maxH+LINES[1].maxH)+'px';
  }
  function apply(l){h1.dataset[l.attr]=l.i;l.el.style.fontSize=l.sizes[l.i].px+'px'}
- const loaded=Promise.all(LINES.flatMap(l=>l.fonts).map(f=>document.fonts.load(f,'Classic grooves. New possibilities.')));
+ // Each font loads on its own; a font that fails is skipped instead of stopping the rotation.
+ LINES.forEach(l=>{l.ok=l.fonts.map(()=>false)});
+ const loaded=Promise.all(LINES.flatMap(l=>l.fonts.map((f,i)=>document.fonts.load(f,'Classic grooves. New possibilities.').then(r=>{l.ok[i]=r.length>0||document.fonts.check(f)}).catch(()=>{}))));
  Promise.race([loaded,new Promise(r=>setTimeout(r,4000))]).then(()=>{
   fit();h1.classList.add('ready');dispatchEvent(new Event('gm:headline'));
   addEventListener('resize',fit);
-  if(reduced.matches)return;
-  loaded.then(()=>LINES.forEach(l=>setTimeout(()=>{
+  LINES.forEach(l=>setTimeout(()=>{
    const step=()=>{
     if(document.hidden||parseFloat(intro.style.opacity||1)<.05)return;
-    l.el.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-8px)'}],{duration:500,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).finished.then(()=>{
-     l.i=(l.i+1)%l.fonts.length;apply(l);
-     l.el.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:700,easing:'cubic-bezier(.2,.7,.2,1)',fill:'forwards'});
+    let next=l.i;for(let k=1;k<=l.fonts.length;k++){const c=(l.i+k)%l.fonts.length;if(l.ok[c]){next=c;break}}
+    if(next===l.i)return;
+    // Reduced motion: a plain cross-fade with no movement.
+    const still=reduced.matches,up=still?'none':'translateY(-8px)',down=still?'none':'translateY(10px)';
+    l.el.animate([{opacity:1,transform:'none'},{opacity:0,transform:up}],{duration:500,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).finished.then(()=>{
+     l.i=next;apply(l);
+     l.el.animate([{opacity:0,transform:down},{opacity:1,transform:'none'}],{duration:700,easing:'cubic-bezier(.2,.7,.2,1)',fill:'forwards'});
     });
    };
    step();setInterval(step,l.every);
-  },l.delay)));
+  },l.delay));
  });
 })();
 render();
