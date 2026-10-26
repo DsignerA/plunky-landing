@@ -1,5 +1,6 @@
 const $=s=>document.querySelector(s);
 const journey=$('#journey'),sleeve=$('#sleeve'),record=$('#heroRecord'),intro=$('.intro'),scene=$('.scene'),collection=$('#collection'),tracks=$('#tracks'),signupPanel=$('#selection'),selectedInfo=$('.selected-info'),needTrack=$('#need-track');
+const stage=$('.stage');
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const ease=v=>{v=clamp(v);return v*v*(3-2*v)};
 const colors=['#c55b2b','#a87543','#984232','#d09444','#ac6a47','#bd6c37','#9f563d','#a88850','#c27a42','#874b3c','#b58c56','#c65a35'];
@@ -19,28 +20,31 @@ function render(){
  const p=clamp((window.scrollY-journey.offsetTop)/(journey.offsetHeight-innerHeight)),mobile=innerWidth<701;
  const pull=ease(p/.22),remove=ease((p-.2)/.17),spread=ease((p-.33)/.14),select=ease((p-.63)/.12),form=ease((p-.79)/.08);
  const selected=chosen!==null;
+ const bounds=tracks.getBoundingClientRect(),stageW=stage.clientWidth,stageH=stage.clientHeight,cols=mobile?3:4,rows=mobile?4:3;
  sleeve.style.transform=`translateX(${-remove*125}%) rotateY(${-15-pull*8-remove*20}deg) rotateZ(${-7-remove*13}deg)`;sleeve.style.opacity=1-remove;
  record.style.transform=`translateX(${28+pull*45-remove*73}%) rotate(${-12+pull*70+remove*35}deg) scale(${1-spread*.7})`;record.style.opacity=1-ease((p-.35)/.08);
- scene.style.left=`${(mobile?45:64)-remove*(mobile?-5:14)}%`;scene.style.top=`${(mobile?62:48)-remove*(mobile?11:0)}%`;
+ scene.style.transform=`translate(calc(-50% + ${-remove*(mobile?-.05:.14)*stageW}px),calc(-50% + ${-remove*(mobile?.11:0)*stageH}px))`;
  intro.style.opacity=1-ease(p/.2);intro.style.transform=`translateY(${-pull*20}px)`;
  const gridVisible=ease((p-.35)/.05)*(1-form);show(collection,gridVisible,p>=.42&&p<.66);
  $('.collection-title').style.opacity=1-select;$('.demo-note').style.opacity=1-select;
- const bounds=tracks.getBoundingClientRect(),cols=mobile?3:4,rows=mobile?4:3;
  const cellW=bounds.width/cols,cellH=bounds.height/rows;
  const size=Math.max(40,Math.min(cellW*(mobile?.73:.7),cellH-(mobile?24:30),mobile?115:165));
+ let deckArgs=null;
  buttons.forEach((button,i)=>{
   const col=i%cols,row=Math.floor(i/cols),gridX=(col+.5)*cellW-size/2,gridY=(row+.5)*cellH-size/2;
   const stackX=bounds.width/2-size/2,stackY=bounds.height/2-size/2;
   let x=stackX+(gridX-stackX)*spread,y=stackY+(gridY-stackY)*spread,scale=2.2-1.2*spread,opacity=1;
   if(select>0){if(selected&&i===chosen-1){const desired=mobile?Math.min(innerWidth*.45,innerHeight*.27):Math.min(innerWidth*.28,innerHeight*.43);const targetX=(mobile?innerWidth*.5:innerWidth*.32)-bounds.left-size/2,targetY=(mobile?innerHeight*.39:innerHeight*.5)-bounds.top-size/2;x+=(targetX-x)*select;y+=(targetY-y)*select;scale+=(desired/size-scale)*select;}else{opacity=1-select;scale*=1-select*.2}}
-  button.style.width=size+'px';button.style.height=size+24+'px';button.style.transform=`translate(${x}px,${y}px) rotate(${(1-spread)*(i-5.5)*6}deg) scale(${scale})`;button.style.opacity=opacity;button.style.pointerEvents=p>=.43&&p<.66?'auto':'none';button.tabIndex=p>=.43&&p<.66?0:-1;button.querySelector('.track-meta').style.opacity=1-select;
+  if(button._size!==size){button._size=size;button.style.width=size+'px';button.style.height=size+24+'px';}button.style.transform=`translate(${x}px,${y}px) rotate(${(1-spread)*(i-5.5)*6}deg) scale(${scale})`;button.style.opacity=opacity;button.style.pointerEvents=p>=.43&&p<.66?'auto':'none';button.tabIndex=p>=.43&&p<.66?0:-1;button.querySelector('.track-meta').style.opacity=1-select;
+  if(selected&&i===chosen-1)deckArgs=[bounds.left+x+size/2,bounds.top+y+(size+24)/2-12*scale,size*scale];
  });
+ if(deckArgs)placeDeck(...deckArgs,select*(1-form),p>=.68&&p<.83);else{deckBase.style.opacity=deckTop.style.opacity=0;deckTop.inert=true;stage.classList.remove('deck-shown')}
  // The selected record remains in the same stage while its form arrives.
  if(selected&&p>=.66){collection.inert=false;collection.style.pointerEvents='none';}
  show(selectedInfo,selected?select*(1-form):0,selected&&p>=.68&&p<.83);
  show(signupPanel,selected?form:0,selected&&p>=.84);
  show(needTrack,!selected?select:0,!selected&&p>=.7);
- if(deckOn&&p<.84)stopDeck();
+ if(deckOn&&p<.64)stopDeck();
  const phase=p<.2?0:p<.4?1:p<.66?2:p<.84?3:4;
  $('#chapterNo').textContent=['01 / THE ARRIVAL','02 / THE REVEAL','03 / THE COLLECTION','04 / YOUR SELECTION','05 / YOUR NEXT CHAPTER'][phase];
  $('#chapterText').textContent=['Every record holds a story.','Pull something new from the grooves.','Twelve tracks. Where will you take them?','Your sound starts here.',confirmed?'Your record is ready.':'Bring your perspective.'][phase];
@@ -53,26 +57,32 @@ document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>jump(Number(b.
 document.querySelectorAll('.backTracks').forEach(b=>b.onclick=()=>jump(.52));$('.close').onclick=()=>jump(.52);
 $('#continueSignup').onclick=()=>jump(.91);
 $('#signup').onsubmit=e=>{e.preventDefault();const data=new FormData(e.target);$('#modalTitle').textContent=`${data.get('dj')}, meet your record.`;$('#modalDescription').textContent=`${String(chosen).padStart(2,'0')} · ${titles[chosen-1]} / ${data.get('city')}`;$('#signup').hidden=true;$('#confirmation').hidden=false;confirmed=true;render()};$('#reset').onclick=()=>{stopDeck();jump(.52)};$('#backcoverPick').onclick=()=>jump(.52);
-// Turntable: the tonearm swings onto the record, the platter spins, and with an
-// approved audio file the arm tracks playback across the grooves.
-const deck=$('#deck'),deckPlay=$('#deckPlay'),deckStatus=$('#deckStatus'),player=new Audio();
+// Turntable: the selected record lands on the platter; play drops the tonearm and spins it.
+// With an approved audio file the arm tracks playback across the grooves.
+const deckBase=$('#deckBase'),deckTop=$('#deckTop'),deckPlay=$('#deckPlay'),deckStatus=$('#deckStatus'),player=new Audio();
 const ARM_REST=0,ARM_START=24,ARM_END=40;
 let deckOn=false;
-const setArm=deg=>deck.style.setProperty('--arm',deg+'deg');
+const setArm=deg=>deckTop.style.setProperty('--arm',deg+'deg');
 function startDeck(){
  if(chosen===null)return;
- deckOn=true;deck.classList.add('on');deckPlay.setAttribute('aria-pressed','true');deckPlay.setAttribute('aria-label','Stop this record');setArm(ARM_START);
+ deckOn=true;stage.classList.add('deck-on');deckPlay.setAttribute('aria-pressed','true');deckPlay.setAttribute('aria-label','Stop this record');setArm(ARM_START);
  const src=audioSrc[chosen];
  if(src){player.src=src;player.currentTime=0;deckStatus.textContent=`Now playing: ${titles[chosen-1]}`;setTimeout(()=>{if(deckOn)player.play().catch(()=>{deckStatus.textContent='Tap play again to start the preview.'})},700)}
  else deckStatus.textContent=`${titles[chosen-1]} · audio preview coming soon`;
 }
 function stopDeck(){
  if(!deckOn)return;
- deckOn=false;player.pause();deck.classList.remove('on');deckPlay.setAttribute('aria-pressed','false');deckPlay.setAttribute('aria-label','Play this record');setArm(ARM_REST);deckStatus.textContent='';
+ deckOn=false;player.pause();stage.classList.remove('deck-on');deckPlay.setAttribute('aria-pressed','false');deckPlay.setAttribute('aria-label','Play this record');setArm(ARM_REST);deckStatus.textContent='';
+}
+// Size and place the deck so its platter sits under the selected record's current position.
+function placeDeck(cx,cy,diameter,opacity,active){
+ const w=diameter/.72,left=cx-.43*w,top=cy-.44*w;
+ for(const el of [deckBase,deckTop]){el.style.width=w+'px';el.style.transform=`translate(${left}px,${top}px)`;el.style.opacity=opacity}
+ deckTop.inert=!active;stage.classList.toggle('deck-shown',opacity>.5);
 }
 player.addEventListener('timeupdate',()=>{if(deckOn&&player.duration)setArm(ARM_START+(ARM_END-ARM_START)*player.currentTime/player.duration)});
 player.addEventListener('ended',stopDeck);
 deckPlay.onclick=()=>deckOn?stopDeck():startDeck();
-$('.platter').onclick=()=>deckOn?stopDeck():startDeck();
+$('.modal-record').onclick=()=>deckOn?stopDeck():startDeck();
 setArm(ARM_REST);
 render();

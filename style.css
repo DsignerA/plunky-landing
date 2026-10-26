@@ -21,17 +21,22 @@
 @media(max-width:700px){.track-meta{font-size:9px}.track-meta small{font-size:8px}.backcover{grid-template-columns:1fr;gap:30px;padding-top:65px}#selectionTitle.long{font-size:30px}}
 @media(max-width:700px){.demo-note{margin-top:16px}}
 
-/* Turntable deck around the selected record (signup step) */
-.deck{--arm:0deg;position:relative;width:100%;max-width:400px;aspect-ratio:1/.92;justify-self:center;background:linear-gradient(145deg,#3a2c22,#251b15);border-radius:14px;box-shadow:inset 0 1px 0 #ffffff1a,inset 0 0 0 1px #00000040,14px 24px 40px #2a170d55}
-.signup-panel .deck .modal-record{max-width:none;width:100%;height:100%}
-.platter{position:absolute;left:6%;top:7%;width:74%;aspect-ratio:1;border-radius:50%;background:#15100c;box-shadow:0 0 0 3px #4a392c,0 6px 14px #0008;padding:2%;cursor:pointer}
-.deck.on .modal-record{animation:deckSpin 1.8s linear infinite}
+/* Turntable on the "your starting point" step. The selected record flies onto the platter;
+   .deck-base sits under the collection layer, .deck-top (arm, play) sits above it. */
+.deck-base,.deck-top{--arm:0deg;position:absolute;left:0;top:0;width:300px;aspect-ratio:1/.92;opacity:0;pointer-events:none}
+.deck-base{z-index:3;background:linear-gradient(145deg,#3a2c22,#251b15);border-radius:14px;box-shadow:inset 0 1px 0 #ffffff1a,inset 0 0 0 1px #00000040,14px 24px 40px #2a170d55}
+.deck-top{z-index:5}
+.platter{position:absolute;left:5%;top:6%;width:76%;aspect-ratio:1;border-radius:50%;background:#15100c;box-shadow:0 0 0 3px #4a392c,0 6px 14px #0008}
+.deck-shown .track.selected .record{outline:none}
+.deck-on .track.selected .record,.deck-on .modal-record{animation:deckSpin 1.8s linear infinite}
 @keyframes deckSpin{to{transform:rotate(360deg)}}
-.tonearm{position:absolute;right:3%;top:4%;width:15%;height:auto;overflow:visible;transform-origin:66.7% 11.5%;transform:rotate(var(--arm));transition:transform .9s cubic-bezier(.3,1.4,.5,1);pointer-events:none;filter:drop-shadow(3px 5px 4px #0007)}
+.tonearm{position:absolute;right:3%;top:4%;width:15%;height:auto;overflow:visible;transform-origin:66.7% 11.5%;transform:rotate(var(--arm));transition:transform .9s cubic-bezier(.3,1.4,.5,1);filter:drop-shadow(3px 5px 4px #0007)}
 .arm-base{fill:#5a4637}.arm-pivot{fill:#d9c39b}.arm-weight{fill:#c94e22}.arm-rod{fill:none;stroke:#e3d3b4;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}.arm-head{fill:#f3e8d2}
-.deck-play{position:absolute;right:5%;bottom:6%;width:46px;height:46px;border-radius:50%;border:0;background:var(--orange);color:#fff8e9;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 10px #0006}
-.deck-play svg{width:20px;height:20px;fill:currentColor}.deck-play .i-stop,.deck.on .deck-play .i-play{display:none}.deck.on .deck-play .i-stop{display:block}
+.deck-play{position:absolute;right:5%;bottom:6%;width:46px;height:46px;border-radius:50%;border:0;background:var(--orange);color:#fff8e9;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 10px #0006;pointer-events:auto}
+.deck-play svg{width:20px;height:20px;fill:currentColor}.deck-play .i-stop,.deck-on .deck-play .i-play{display:none}.deck-on .deck-play .i-stop{display:block}
 .deck-play:focus-visible{outline:2px solid #f3e8d2;outline-offset:3px}
-.deck-status{position:absolute;left:0;right:0;top:100%;margin:12px 0 0;text-align:center;font-size:10px;letter-spacing:1px;color:#80503a;min-height:1em}
-@media(max-width:700px){.signup-panel .deck{width:min(26svh,175px)}.deck-play{width:34px;height:34px}.deck-play svg{width:15px;height:15px}.deck-status{font-size:8px;margin-top:6px}.signup-panel{gap:26px}}
-@media(prefers-reduced-motion:reduce){.deck.on .modal-record{animation:none}}
+.deck-status{position:absolute;left:0;right:0;top:100%;margin:12px 0 0;text-align:center;font-size:10px;letter-spacing:1px;color:#80503a}
+@media(max-width:700px){.deck-play{width:36px;height:36px}.deck-play svg{width:15px;height:15px}.deck-status{font-size:8px;margin-top:6px}}
+@media(prefers-reduced-motion:reduce){.deck-on .track.selected .record,.deck-on .modal-record{animation:none}}
+.scene,.deck-base,.deck-top{will-change:transform,opacity}
+.track .label small{display:none}
