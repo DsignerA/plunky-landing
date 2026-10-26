@@ -1,0 +1,48 @@
+GROOVE MAKERS — CPANEL HANDOFF
+
+This is the latest pinned-scene prototype. Plain HTML, CSS, and JavaScript.
+No build, npm, Node server, database, or Sites hosting dependency is needed.
+
+FILES
+site/index.html — page markup
+site/style.css — visuals, responsive layouts, and vinyl styling
+site/app.js — scroll phases, track selection, and signup preview
+source-checksums.json — SHA-256 checksums of exported page files
+
+DEPLOY
+1. Identify bisonboost.com's actual document root in cPanel. Do not assume it is public_html.
+2. Back up the existing /groovemakers directory and inspect its signup/backend integration.
+3. Initially create /groovemakers-preview under that document root.
+4. Upload ONLY the three files inside site/ directly into that preview directory.
+   Do not upload the site folder itself unless a nested URL is intended.
+5. Open https://bisonboost.com/groovemakers-preview/ and test the full flow.
+6. Integrate the existing registration backend before replacing the current campaign.
+   Keep working signup routes, submissions, assets, and existing campaign information.
+7. Keep this source in your working repository; commit future changes there before deployment.
+
+CURRENT EXPERIENCE
+One sticky full-viewport scene; scroll advances sleeve opening, record reveal,
+12-track spread, selected record, inline signup preview, and confirmation.
+Optional community content follows after the pinned sequence.
+Buttons allow navigation without completing the entire scroll.
+The page supports desktop and mobile layouts.
+
+KNOWN LIMITS
+Tracks are numbered placeholders. There are no real titles, previews, or downloads.
+Form submission only changes the page in browser memory. It sends and stores NOTHING.
+No confirmation emails, actual competition registration, voting, or prize handling exist.
+Do not describe a preview confirmation as a completed registration.
+Typography uses Google Fonts with fallback fonts if that service is unavailable.
+No real 3D models: CSS draws and transforms the sleeve and records.
+
+CONTINUE IMPLEMENTATION
+Preserve the user's key direction: the whole DJ journey stays in ONE pinned section.
+Scrolling advances the scene; selection, listening, and form entry use normal controls.
+Keep the existing appearance for now. Prioritize continuity and actual registration.
+Replace placeholders using the approved 12-track catalog and authorized music files.
+Connect the selected track identifier to the real registration endpoint.
+Validate on mobile/desktop, keyboard navigation, reduced-motion preferences, and form errors.
+
+SOURCE
+Exported from the latest published Groove Makers prototype on 2026-10-26.
+Preview: https://groove-makers-scroll.rahel007.chatgpt.site
