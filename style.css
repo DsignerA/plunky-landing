@@ -40,3 +40,14 @@
 @media(prefers-reduced-motion:reduce){.deck-on .track.selected .record,.deck-on .modal-record{animation:none}}
 .scene,.deck-base,.deck-top{will-change:transform,opacity}
 .track .label small{display:none}
+
+/* Mobile polish: no sticky tap outline/hover on touch, no transform transition fighting the scroll,
+   no default blue link color or tap flash on iOS. */
+.track{transition:none}
+.track:focus:not(:focus-visible){outline:none}
+@media(hover:none){.track:hover{outline:none}.track:hover .record{transform:none}}
+.deck-shown .track{outline:none!important}
+button,a{-webkit-tap-highlight-color:transparent}
+.secondary{color:inherit;font-family:inherit}
+.progress i{width:100%!important;transform-origin:left;transform:scaleX(0);will-change:transform}
+.sleeve,.big{backface-visibility:hidden}
