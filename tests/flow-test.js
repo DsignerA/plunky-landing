@@ -14,7 +14,7 @@ async function run(name, viewport, opts = {}) {
   const r = [];
   const setP = async p => {
     await page.evaluate(p => { const j = document.querySelector('#journey'); window.scrollTo({ top: j.offsetTop + (j.offsetHeight - innerHeight) * p, behavior: 'instant' }); }, p);
-    await wait(250);
+    await wait(700);
   };
   const state = () => page.evaluate(() => ({
     chapter: document.querySelector('#chapterNo').textContent,

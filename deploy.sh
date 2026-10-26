@@ -3,6 +3,8 @@
 # CSS/JS are published under content-hashed names because the Supersonic CDN in front of
 # www can keep serving stale copies of an unchanged URL (even with a ?v= query).
 set -euo pipefail
+# Fresh connections: a wedged shared ControlMaster socket can hang every scp.
+SSHO="-o ControlPath=none -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
 cd "$(dirname "$0")"
 REMOTE=/home/striurym/bisonboost.com/groovemakers-preview
 DIST=$(mktemp -d)
@@ -16,13 +18,15 @@ sed -E "s#href=\"style[^\"]*\.css[^\"]*\"#href=\"$css\"#; s#src=\"app[^\"]*\.js[
 grep -q "$css" "$DIST/index.html" && grep -q "$js" "$DIST/index.html"
 
 ts=$(date +%Y%m%d-%H%M%S)
-ssh otaku "cd $REMOTE && mkdir -p ~/groovemakers-preview-backups/$ts && cp -p index.html ~/groovemakers-preview-backups/$ts/ && mkdir -p assets"
-scp -q assets/*.webp otaku:$REMOTE/assets/
-scp -q "$DIST/$css" "$DIST/$js" otaku:$REMOTE/
-scp -q "$DIST/index.html" otaku:$REMOTE/.index.html.new
-ssh otaku "cd $REMOTE && chmod 644 $css $js assets/*.webp .index.html.new && mv -f .index.html.new index.html"
+ssh $SSHO otaku "cd $REMOTE && mkdir -p ~/groovemakers-preview-backups/$ts && cp -p index.html ~/groovemakers-preview-backups/$ts/ && mkdir -p assets/spotlight"
+scp $SSHO -q assets/*.webp otaku:$REMOTE/assets/
+scp $SSHO -q assets/spotlight/* otaku:$REMOTE/assets/spotlight/
+scp $SSHO -q "$DIST/$css" "$DIST/$js" otaku:$REMOTE/
+scp $SSHO -q "$DIST/index.html" otaku:$REMOTE/.index.html.new
+scp $SSHO -q spotlight.html otaku:$REMOTE/.spotlight.html.new
+ssh $SSHO otaku "cd $REMOTE && chmod 755 assets/spotlight && chmod 644 $css $js assets/*.webp assets/spotlight/* .index.html.new .spotlight.html.new && mv -f .spotlight.html.new spotlight.html && mv -f .index.html.new index.html"
 
-for f in "" "$css" "$js"; do
+for f in "" "$css" "$js" spotlight.html; do
   code=$(curl -s -o /dev/null -w "%{http_code}" "https://www.bisonboost.com/groovemakers-preview/$f")
   echo "$code /groovemakers-preview/$f"
   [ "$code" = 200 ] || { echo "verify failed"; exit 1; }

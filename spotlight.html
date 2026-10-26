@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>DJ Spotlight preview</title>
+<!-- Same card, styles and artwork as the live campaign page (/groove-makers/dj/),
+     with the artwork compressed to WebP copies in assets/spotlight/. -->
+<style>
+:root {
+  --ink: #17100d;
+  --brown: #2b1510;
+  --red: #d82d17;
+  --orange: #f04c1a;
+  --cream: #f4ead3;
+  --paper: #e6d1aa;
+  --muted: #ad9b86;
+  --line: rgba(244, 234, 211, .22);
+  --shadow: 0 28px 80px rgba(0, 0, 0, .38);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--cream);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(216, 45, 23, .22), transparent 34rem),
+    linear-gradient(145deg, #21100c 0%, #0b0908 58%, #160b08 100%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button, input, select { font: inherit; }
+
+button, select, input, label[for] { cursor: pointer; }
+
+.site-header {
+  width: min(1160px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.site-header .brand img {
+  display: block;
+  width: 130px;
+  height: 62px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.site-header p {
+  margin: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.header-actions { display: flex; align-items: center; gap: 18px; }
+.version-link { color: var(--cream); text-decoration: none; text-transform: uppercase; letter-spacing: .12em; font-size: 10px; font-weight: 900; }
+.version-link:hover { color: var(--orange); }
+
+.workspace {
+  width: min(1160px, calc(100% - 32px));
+  margin: 38px auto 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 620px) minmax(320px, 1fr);
+  gap: 44px;
+  align-items: start;
+}
+
+.instagram-card {
+  overflow: hidden;
+  color: #17100d;
+  background: #fbfaf7;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+
+.ig-topbar {
+  height: 72px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: var(--cream);
+  background: var(--red);
+  border: 3px solid #f3a126;
+  border-radius: 50%;
+  font-weight: 1000;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.ig-topbar strong, .ig-topbar span { display: block; }
+.ig-topbar strong { font-size: 13px; }
+.ig-topbar span { margin-top: 2px; font-size: 11px; }
+
+.menu-button {
+  margin-left: auto;
+  padding: 8px;
+  border: 0;
+  color: #20140f;
+  background: transparent;
+  font-size: 18px;
+  letter-spacing: 2px;
+}
+
+.carousel {
+  position: relative;
+  overflow: hidden;
+  background: var(--brown);
+  aspect-ratio: 1 / 1;
+  touch-action: pan-y;
+}
+
+.slides {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  transition: transform .48s cubic-bezier(.22, .75, .2, 1);
+}
+
+.slide {
+  position: relative;
+  flex: 0 0 100%;
+  min-width: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.paper-noise {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  opacity: .22;
+  pointer-events: none;
+  background: url("assets/spotlight/distressed-grunge-overlay.webp") center / cover;
+  mix-blend-mode: screen;
+}
+
+.slide::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  z-index: 8;
+  border: 1px solid rgba(244, 234, 211, .45);
+  pointer-events: none;
+}
+
+.slide-kicker, .issue-label, .close-label {
+  text-transform: uppercase;
+  font-size: clamp(8px, 1.5vw, 12px);
+  font-weight: 900;
+  letter-spacing: .18em;
+}
+
+.slide-hero {
+  background:
+    linear-gradient(90deg, transparent 49.5%, rgba(244,234,211,.18) 49.5%, rgba(244,234,211,.18) 50.3%, transparent 50.3%),
+    linear-gradient(0deg, transparent 73%, rgba(244,234,211,.15) 73%, rgba(244,234,211,.15) 74%, transparent 74%),
+    #2b120d;
+}
+
+.slide-hero::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  width: 52%;
+  height: 74%;
+  background: var(--red);
+  clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%, 0 18%);
+}
+
+.hero-brand {
+  position: absolute;
+  z-index: 5;
+  top: 4.8%;
+  left: 4.8%;
+  width: 44%;
+  height: 27%;
+  object-fit: contain;
+  object-position: left top;
+}
+
+.slide-kicker {
+  position: absolute;
+  z-index: 5;
+  top: 5%;
+  right: 5%;
+  color: var(--cream);
+  writing-mode: vertical-rl;
+}
+
+.hero-photo-frame {
+  position: absolute;
+  z-index: 2;
+  top: 8%;
+  right: 3%;
+  width: 58%;
+  height: 76%;
+  overflow: hidden;
+}
+
+.main-photo { width: 100%; height: 100%; object-fit: contain; object-position: right bottom; }
+
+.hero-photo-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(43,18,13,.85), transparent 35%), linear-gradient(0deg, #2b120d 0%, transparent 28%);
+}
+
+.hero-copy {
+  position: absolute;
+  z-index: 5;
+  left: 4.8%;
+  right: 4%;
+  top: 36%;
+  color: var(--cream);
+}
+
+.hero-copy h1 {
+  margin: 5px 0 0;
+  max-width: 88%;
+  color: var(--cream);
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(54px, 12vw, 105px);
+  font-weight: 900;
+  line-height: .78;
+  letter-spacing: -.045em;
+  text-transform: uppercase;
+  text-shadow: 5px 5px 0 var(--red);
+}
+
+.hero-copy p { margin: 16px 0 0; text-transform: uppercase; letter-spacing: .18em; font-size: 11px; font-weight: 800; }
+
+.catalog-banner {
+  position: absolute;
+  z-index: 6;
+  left: 4.5%;
+  bottom: 19%;
+  width: 78%;
+  max-height: 19%;
+  object-fit: contain;
+  object-position: left center;
+  transform: rotate(-1deg);
+}
+
+.slide.is-entering > *:not(.paper-noise) { animation: carousel-enter-right .62s cubic-bezier(.2,.8,.2,1) both; }
+.slide.is-entering.from-left > *:not(.paper-noise) { animation-name: carousel-enter-left; }
+.slide.is-exiting > *:not(.paper-noise) { animation: carousel-exit-left .34s ease-in both; }
+.slide.is-exiting.to-right > *:not(.paper-noise) { animation-name: carousel-exit-right; }
+.slide.is-entering > *:nth-child(3) { animation-delay: 45ms; }
+.slide.is-entering > *:nth-child(4) { animation-delay: 90ms; }
+.slide.is-entering > *:nth-child(5) { animation-delay: 135ms; }
+.slide.is-entering > *:nth-child(6) { animation-delay: 180ms; }
+
+@keyframes carousel-enter-right {
+  from { opacity: 0; translate: 34px 0; filter: blur(3px); }
+  to { opacity: 1; translate: 0 0; filter: none; }
+}
+
+@keyframes carousel-enter-left {
+  from { opacity: 0; translate: -34px 0; filter: blur(3px); }
+  to { opacity: 1; translate: 0 0; filter: none; }
+}
+
+@keyframes carousel-exit-left {
+  from { opacity: 1; translate: 0 0; filter: none; }
+  to { opacity: 0; translate: -20px 0; filter: blur(2px); }
+}
+
+@keyframes carousel-exit-right {
+  from { opacity: 1; translate: 0 0; filter: none; }
+  to { opacity: 0; translate: 20px 0; filter: blur(2px); }
+}
+
+.sponsor-lockup,
+.mini-sponsor {
+  position: absolute;
+  z-index: 9;
+  right: 3.5%;
+  bottom: 4%;
+  width: clamp(190px, 42%, 255px);
+  min-height: 66px;
+  padding: 10px 14px 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  color: var(--cream);
+  background: transparent;
+  border: 0;
+  isolation: isolate;
+}
+
+.sponsor-lockup::before,
+.mini-sponsor::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -30% -18% -32% -21%;
+  background: url("assets/spotlight/sponsor-brush-v2.webp") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 5px 9px rgba(20, 9, 6, .26));
+}
+
+.sponsor-lockup span,
+.mini-sponsor span {
+  max-width: 64px;
+  display: flex;
+  align-items: center;
+  text-transform: uppercase;
+  font-size: 7px;
+  line-height: 1.18;
+  font-weight: 1000;
+  letter-spacing: .14em;
+}
+
+.sponsor-lockup span::after,
+.mini-sponsor span::after {
+  content: "";
+  flex: 0 0 22px;
+  height: 1px;
+  margin-left: 8px;
+  background: rgba(244, 234, 211, .9);
+}
+
+.sponsor-lockup img,
+.mini-sponsor img {
+  width: 98px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.18));
+}
+
+.slide-hero .sponsor-lockup { width: clamp(210px, 47%, 282px); min-height: 72px; }
+.slide-hero .sponsor-lockup img { width: 118px; height: 52px; }
+.slide-hero .sponsor-identity { width: 118px; }
+
+.sponsor-identity { width: 98px; display: flex; flex-direction: column; align-items: center; gap: 0; }
+.sponsor-identity .js-sponsor-handle { max-width: 100%; color: var(--cream); font-size: 6px; line-height: 1; letter-spacing: .08em; text-transform: none; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,.65); }
+
+.slide-story { background: var(--red); }
+
+.story-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 44% 56%;
+  grid-template-rows: 56% 44%;
+}
+
+.story-photo { grid-row: 1 / 3; overflow: hidden; background: var(--orange); border-right: 8px solid var(--brown); }
+.story-photo img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+.story-number { padding: 3% 7%; color: #ff4e2e; background: var(--brown); font: 900 clamp(80px, 15vw, 132px)/1 Impact, sans-serif; text-align: right; }
+.story-copy { padding: 7% 8%; color: var(--brown); background: var(--paper); }
+.story-copy span { text-transform: uppercase; letter-spacing: .2em; font-size: 10px; font-weight: 1000; }
+.story-copy h2 { margin: 10px 0; font: 900 clamp(26px, 4.4vw, 40px)/.92 Impact, sans-serif; text-transform: uppercase; }
+.story-copy p { margin: 0; font-size: clamp(9px, 1.5vw, 13px); line-height: 1.4; font-weight: 650; }
+.sponsor-lockup-dark { left: auto; right: 3.5%; bottom: 4%; }
+
+.slide-offer { padding: 7%; color: var(--cream); background: var(--orange); }
+.slide-offer::before { content: ""; position: absolute; inset: 0 0 43% 47%; background: var(--brown); clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%); }
+.offer-icon { position: absolute; z-index: 2; top: 6%; right: 6%; width: 34%; height: 34%; object-fit: contain; mix-blend-mode: screen; }
+.slide-offer .issue-label { position: relative; z-index: 3; }
+.slide-offer h2 { position: relative; z-index: 3; max-width: 75%; margin: 18px 0 0; font: 900 clamp(44px, 8.5vw, 78px)/.84 Impact, sans-serif; text-transform: uppercase; }
+.offer-card { position: absolute; z-index: 4; left: 7%; right: 7%; bottom: 19%; padding: 5%; color: var(--brown); background: var(--cream); border: 6px solid var(--brown); transform: rotate(-1deg); }
+.offer-card span { text-transform: uppercase; letter-spacing: .18em; font-size: 10px; font-weight: 900; }
+.offer-card strong { display: block; margin-top: 8px; font: 900 clamp(30px, 6vw, 58px)/.9 Impact, sans-serif; text-transform: uppercase; }
+.offer-card p { max-width: 80%; margin: 10px 0 0; font-size: clamp(10px, 1.8vw, 14px); font-weight: 700; }
+.sponsor-lockup-offer { bottom: 4%; }
+
+.slide-unlock { background: var(--brown); }
+.unlock-photo { position: absolute; inset: 2% -4% 0 43%; width: 61%; height: 98%; object-fit: contain; object-position: right bottom; opacity: .72; }
+.slide-unlock::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, var(--brown) 38%, transparent 76%); }
+.unlock-copy { position: absolute; z-index: 3; top: 8%; left: 6%; width: 70%; }
+.unlock-copy .step { display: block; width: max-content; margin-bottom: 7px; padding: 6px 9px; color: var(--brown); background: var(--cream); text-transform: uppercase; font-size: clamp(8px, 1.5vw, 11px); font-weight: 900; letter-spacing: .11em; }
+.unlock-copy h2 { margin: 6% 0 2%; color: var(--orange); font: 900 clamp(54px, 10vw, 96px)/.77 Impact, sans-serif; text-transform: uppercase; }
+.unlock-copy p { text-transform: uppercase; font-size: 10px; font-weight: 900; letter-spacing: .18em; }
+.mini-sponsor { left: 4%; right: auto; bottom: 5%; }
+
+.slide-close { padding: 7%; color: var(--cream); background: var(--red); }
+.slide-close::before { content: ""; position: absolute; inset: 0; background: linear-gradient(125deg, transparent 55%, rgba(43,21,16,.75)); }
+.close-cutout { position: absolute; z-index: 1; right: -6%; bottom: -4%; width: 68%; height: 68%; object-fit: contain; filter: grayscale(1) sepia(1) saturate(3); opacity: .72; }
+.close-label { position: relative; z-index: 3; }
+.slide-close h2 { position: relative; z-index: 3; margin: 5% 0 2%; font: 900 clamp(74px, 14vw, 132px)/.73 Impact, sans-serif; letter-spacing: -.04em; text-transform: uppercase; text-shadow: 5px 5px 0 var(--brown); }
+.slide-close > p { position: relative; z-index: 3; width: 58%; max-width: 330px; line-height: 1.45; font-weight: 700; font-size: clamp(11px, 1.7vw, 14px); }
+.closing-title { position: absolute; z-index: 3; left: 7%; bottom: 22%; padding: 7px 10px; color: var(--brown); background: var(--cream); text-transform: uppercase; font-weight: 1000; letter-spacing: .12em; font-size: 10px; }
+.sponsor-lockup-close { bottom: 4%; }
+.boost-campaign-lockup { position: absolute; z-index: 4; right: 5%; bottom: 5%; width: 168px; min-height: 58px; padding: 8px 11px 8px 8px; display: grid; grid-template-columns: 45px 1fr; grid-template-rows: auto auto; align-items: center; column-gap: 8px; color: var(--cream); isolation: isolate; }
+.boost-campaign-lockup::before { content: ""; position: absolute; z-index: -1; inset: -29% -18% -31% -21%; background: url("assets/spotlight/sponsor-brush-v2.webp") center / 100% 100% no-repeat; filter: drop-shadow(0 5px 9px rgba(20,9,6,.26)); }
+.boost-campaign-lockup img { grid-row: 1 / 3; width: 45px; height: 45px; object-fit: contain; }
+.boost-campaign-lockup span { align-self: end; text-transform: uppercase; letter-spacing: .12em; font-size: 6px; font-weight: 800; }
+.boost-campaign-lockup strong { align-self: start; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; line-height: 1.1; }
+
+.carousel-arrow {
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(0,0,0,.42);
+  backdrop-filter: blur(8px);
+  transform: translateY(-50%);
+  font-size: 29px;
+  line-height: 1;
+  box-shadow: 0 5px 18px rgba(0,0,0,.25);
+}
+
+.carousel-arrow:hover { background: var(--red); }
+.carousel-arrow.previous { left: 12px; }
+.carousel-arrow.next { right: 12px; }
+.slide-count { position: absolute; z-index: 20; top: 15px; right: 15px; padding: 7px 10px; color: #fff; background: rgba(0,0,0,.55); border-radius: 14px; font-size: 11px; font-weight: 800; }
+
+.ig-actions { padding: 11px 16px 1px; display: flex; align-items: center; gap: 14px; color: #18110e; line-height: 1; }
+.ig-action { display: inline-flex; align-items: center; gap: 4px; }
+.ig-action svg { width: 25px; height: 25px; display: block; overflow: visible; }
+.ig-action b { font-size: 11px; font-weight: 750; }
+.ig-action.save { margin-left: auto; }
+.dots { height: 20px; display: flex; justify-content: center; align-items: center; gap: 5px; }
+.dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: #bababa; }
+.dot.is-active { background: #e2371f; transform: scale(1.15); }
+.caption { padding: 0 16px 17px; font-size: 12px; line-height: 1.45; }
+
+.editor { position: sticky; top: 24px; padding: 30px; color: var(--cream); background: rgba(34, 20, 15, .82); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); backdrop-filter: blur(16px); }
+.editor-heading { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.editor-heading > span { color: var(--orange); text-transform: uppercase; letter-spacing: .18em; font-size: 10px; font-weight: 1000; }
+.editor-heading h2 { margin: 7px 0 8px; font: 900 42px/.92 Impact, sans-serif; letter-spacing: -.01em; text-transform: uppercase; }
+.editor-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+
+.field-group { margin-top: 17px; }
+.field-group label { display: block; margin-bottom: 7px; color: #d7c9b8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .11em; }
+.field-group select, .field-group input { width: 100%; min-height: 48px; padding: 0 13px; color: var(--cream); background: #160e0b; border: 1px solid rgba(244,234,211,.24); border-radius: 9px; outline: none; }
+.field-group select:focus, .field-group input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(240,76,26,.15); }
+.input-prefix { position: relative; }
+.input-prefix span { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--orange); font-weight: 900; }
+.input-prefix input { padding-left: 29px; }
+
+.locked-account { min-height: 48px; padding: 0 13px; display: flex; align-items: center; justify-content: space-between; color: var(--cream); background: rgba(255,255,255,.045); border: 1px solid rgba(244,234,211,.16); border-radius: 9px; }
+.locked-account strong { font-size: 14px; }
+.locked-account span { padding: 4px 7px; color: var(--muted); border: 1px solid rgba(244,234,211,.15); border-radius: 999px; text-transform: uppercase; letter-spacing: .11em; font-size: 8px; font-weight: 900; }
+
+.upload-grid { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.upload-grid.single { grid-template-columns: 1fr; }
+.upload-button { min-height: 118px; padding: 14px; display: flex; flex-direction: column; justify-content: center; color: var(--cream); background: rgba(255,255,255,.035); border: 1px dashed rgba(244,234,211,.32); border-radius: 10px; transition: .2s ease; }
+.upload-button:hover { color: #fff; background: rgba(240,76,26,.12); border-color: var(--orange); transform: translateY(-2px); }
+.upload-button > span { color: var(--orange); font-size: 28px; line-height: 1; }
+.upload-button strong { margin-top: 7px; font-size: 12px; }
+.upload-button small { margin-top: 5px; color: var(--muted); font-size: 9px; line-height: 1.3; }
+.file-status { min-height: 18px; margin: 13px 0; color: var(--muted); font-size: 11px; }
+.reset-button { width: 100%; min-height: 44px; color: var(--cream); background: transparent; border: 1px solid var(--line); border-radius: 9px; font-weight: 800; }
+.reset-button:hover { color: #fff; border-color: var(--orange); }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+.site-footer { padding: 10px 16px 34px; display: flex; justify-content: center; color: var(--cream); text-align: center; text-transform: uppercase; letter-spacing: .15em; font-size: 8px; }
+.boost-footer-lockup { position: relative; min-width: 190px; min-height: 50px; padding: 6px 18px; display: flex; align-items: center; justify-content: center; gap: 8px; isolation: isolate; }
+.boost-footer-lockup::before { content: ""; position: absolute; z-index: -1; inset: -31% -17% -34% -19%; background: url("assets/spotlight/sponsor-brush-v2.webp") center / 100% 100% no-repeat; filter: drop-shadow(0 5px 9px rgba(20,9,6,.3)); }
+.boost-footer-lockup img { width: 38px; height: 38px; object-fit: contain; }
+.boost-footer-lockup strong { color: var(--cream); letter-spacing: .12em; font-size: 10px; }
+
+@media (max-width: 940px) {
+  .workspace { max-width: 660px; grid-template-columns: 1fr; }
+  .editor { position: static; }
+}
+
+@media (max-width: 560px) {
+  .site-header, .workspace { width: calc(100% - 20px); }
+  .site-header p { display: none; }
+  .header-actions { gap: 0; }
+  .workspace { margin-top: 18px; gap: 22px; }
+  .instagram-card, .editor { border-radius: 14px; }
+  .editor { padding: 22px 18px; }
+  .editor-heading h2 { font-size: 35px; }
+  .sponsor-lockup, .mini-sponsor { width: 190px; min-height: 55px; padding: 8px 10px 8px 15px; }
+  .sponsor-lockup img, .mini-sponsor img { width: 78px; height: 36px; }
+  .sponsor-identity { width: 78px; }
+  .slide-hero .sponsor-lockup { width: 215px; min-height: 62px; }
+  .slide-hero .sponsor-lockup img { width: 96px; height: 44px; }
+  .slide-hero .sponsor-identity { width: 96px; }
+  .sponsor-lockup span, .mini-sponsor span { max-width: 58px; font-size: 6px; }
+  .sponsor-lockup span::after, .mini-sponsor span::after { flex-basis: 16px; margin-left: 6px; }
+  .slide-offer h2 { max-width: 72%; margin-top: 10px; font-size: 32px; line-height: .82; }
+  .offer-card { bottom: 19%; padding: 3%; border-width: 4px; }
+  .offer-card span { font-size: 8px; }
+  .offer-card strong { margin-top: 5px; font-size: 25px; line-height: .86; }
+  .offer-card p { max-width: 86%; margin-top: 6px; font-size: 9px; line-height: 1.25; }
+  .upload-grid { grid-template-columns: 1fr; }
+  .slide::after { inset: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+</style>
+<style>
+html,body{background:transparent;min-height:0;margin:0;overflow:hidden}
+body{padding:0}
+.instagram-card{width:100%;box-shadow:none;border-color:rgba(41,23,13,.08)}
+.menu-button{pointer-events:none}
+</style>
+</head>
+<body>
+<section class="instagram-card" aria-label="Instagram carousel preview">
+      <div class="ig-topbar">
+        <div class="avatar"><img src="assets/spotlight/plunky-profile.jpg" alt="Plunky profile photo"></div>
+        <div>
+          <strong id="previewHandle">plunkyone</strong>
+          <span>Richmond, Virginia</span>
+        </div>
+        <button type="button" class="menu-button" aria-label="Post options">•••</button>
+      </div>
+
+      <div class="carousel" id="carousel">
+        <div class="slides" id="slides">
+          <article class="slide slide-hero is-active" data-slide="0" aria-hidden="false">
+            <div class="paper-noise"></div>
+            <img class="hero-brand" src="assets/spotlight/groove-makers-by-plunky-logo.webp" alt="Groove Makers by Plunky">
+            <div class="slide-kicker">Winner category / Week 01</div>
+            <div class="hero-photo-frame">
+              <img class="main-photo js-main-photo" src="assets/spotlight/woman-halftone-cutout.webp" alt="Featured Groove Maker">
+            </div>
+            <div class="hero-copy">
+              <span class="issue-label">Featured Groove Maker / Week 01</span>
+              <h1 class="js-secondary-title">DJ Spotlight</h1>
+              <p>Celebrating standout talent</p>
+            </div>
+            <img class="catalog-banner" src="assets/spotlight/catalog-mix-competition-banner.webp" alt="Catalog Mix Competition — DJs and producers create new mixes using Plunky's music catalog">
+            <div class="sponsor-lockup">
+              <span>In partnership with</span>
+              <img class="js-sponsor-logo" src="assets/spotlight/mama-js-logo.webp" alt="Mama J's sponsor logo">
+            </div>
+          </article>
+
+          <article class="slide slide-story" data-slide="1" aria-hidden="true">
+            <div class="paper-noise"></div>
+            <div class="story-grid">
+              <div class="story-photo">
+                <img class="js-main-photo" src="assets/spotlight/woman-halftone-cutout.webp" alt="Featured Groove Maker">
+              </div>
+              <div class="story-number">02</div>
+              <div class="story-copy">
+                <span>The moment</span>
+                <h2>Where talent turns sound into something bigger.</h2>
+                <p>This week's Groove Maker brought a fresh point of view to Plunky's catalog—built from soul, rhythm and fearless selection.</p>
+              </div>
+            </div>
+            <div class="sponsor-lockup sponsor-lockup-dark">
+              <span>In partnership with</span>
+              <img class="js-sponsor-logo" src="assets/spotlight/mama-js-logo.webp" alt="Mama J's sponsor logo">
+            </div>
+          </article>
+
+          <article class="slide slide-offer" data-slide="2" aria-hidden="true">
+            <div class="paper-noise"></div>
+            <img class="offer-icon" src="assets/spotlight/vinyl-record-icon.webp" alt="">
+            <span class="issue-label">Groove Makers perk / 03</span>
+            <h2>A little something for the culture.</h2>
+            <div class="offer-card">
+              <span>Exclusive sponsor offer</span>
+              <strong id="offerPreview">10% off your next visit</strong>
+              <p>Made for the DJs, listeners and people moving music forward.</p>
+            </div>
+            <div class="sponsor-lockup sponsor-lockup-offer">
+              <span>In partnership with</span>
+              <img class="js-sponsor-logo" src="assets/spotlight/mama-js-logo.webp" alt="Mama J's sponsor logo">
+            </div>
+          </article>
+
+          <article class="slide slide-unlock" data-slide="3" aria-hidden="true">
+            <div class="paper-noise"></div>
+            <img class="unlock-photo js-main-photo" src="assets/spotlight/woman-halftone-cutout.webp" alt="Featured Groove Maker">
+            <div class="unlock-copy">
+              <span class="step">01 / Share this post</span>
+              <span class="step">02 / Tag <b class="js-handle">@plunkyone</b></span>
+              <span class="step">03 / Unlock the offer</span>
+              <h2>Share it.<br>Unlock it.<br>Enjoy it.</h2>
+              <p>Culture moves when we pass it on.</p>
+            </div>
+            <div class="mini-sponsor">
+              <span>In partnership with</span>
+              <img class="js-sponsor-logo" src="assets/spotlight/mama-js-logo.webp" alt="Mama J's sponsor logo">
+            </div>
+          </article>
+
+          <article class="slide slide-close" data-slide="4" aria-hidden="true">
+            <div class="paper-noise"></div>
+            <img class="close-cutout" src="assets/spotlight/turntable-mixer-cutout.webp" alt="Turntable and mixer">
+            <span class="close-label">Groove Makers by Plunky / 05</span>
+            <h2>Sponsor<br>the culture.</h2>
+            <p>Be part of the sounds, stories and people shaping a brighter music tomorrow.</p>
+            <div class="closing-title js-secondary-title">DJ Spotlight</div>
+            <div class="boost-campaign-lockup">
+              <img src="assets/spotlight/boost-bison-logo-v2.webp" alt="Boost Bison logo">
+              <span>Campaign powered by</span>
+              <strong>Boost Bison</strong>
+            </div>
+          </article>
+        </div>
+
+        <button type="button" class="carousel-arrow previous" id="previous" aria-label="Previous slide">‹</button>
+        <button type="button" class="carousel-arrow next" id="next" aria-label="Next slide">›</button>
+        <div class="slide-count" id="slideCount" aria-live="polite">1 / 5</div>
+      </div>
+
+      <div class="ig-actions" aria-label="Post engagement preview">
+        <span class="ig-action" title="Likes"><svg aria-hidden="true"><use href="assets/spotlight/social-icons.svg#icon-heart"></use></svg><b>7</b></span>
+        <span class="ig-action" title="Comments"><svg aria-hidden="true"><use href="assets/spotlight/social-icons.svg#icon-comment"></use></svg><b>1</b></span>
+        <span class="ig-action" title="Reposts"><svg aria-hidden="true"><use href="assets/spotlight/social-icons.svg#icon-repost"></use></svg><b>1</b></span>
+        <span class="ig-action" title="Share"><svg aria-hidden="true"><use href="assets/spotlight/social-icons.svg#icon-share"></use></svg></span>
+        <span class="ig-action save" title="Save"><svg aria-hidden="true"><use href="assets/spotlight/social-icons.svg#icon-save"></use></svg></span>
+      </div>
+      <div class="dots" id="dots" aria-label="Choose a slide"></div>
+      <div class="caption">
+        <strong class="js-handle">@plunkyone</strong>
+        <span> Meet <b class="js-dj-name">your DJ name</b> — <b class="js-dj-handle">@yourhandle</b>. Swipe to preview the Groove Makers spotlight.</span>
+      </div>
+    </section>
+<script>
+(() => {
+  'use strict';
+  const slidesTrack = document.getElementById('slides');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dots = document.getElementById('dots');
+  const slideCount = document.getElementById('slideCount');
+  const carousel = document.getElementById('carousel');
+  const total = slides.length;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let current = 0, autoplay = null;
+  const motion = ['is-entering', 'is-exiting', 'from-left', 'from-right', 'to-left', 'to-right'];
+  const updateText = (selector, value) => document.querySelectorAll(selector).forEach(el => { el.textContent = value; });
+
+  // Carousel behaviour carried over from the campaign page (dj-v3.js).
+  const showSlide = (index, direction) => {
+    const previous = current, next = (index + total) % total, initial = !slidesTrack.dataset.ready;
+    direction = direction || (next >= previous ? 1 : -1);
+    slidesTrack.dataset.ready = 'true';
+    slides.forEach(s => s.classList.remove(...motion));
+    if (initial) slides[next].classList.add('is-entering', 'from-right');
+    else if (next !== previous) {
+      slides[previous].classList.add('is-exiting', direction > 0 ? 'to-left' : 'to-right');
+      slides[next].classList.add('is-entering', direction > 0 ? 'from-right' : 'from-left');
+    }
+    current = next;
+    slidesTrack.style.transform = `translateX(-${current * 100}%)`;
+    slides.forEach((s, i) => { s.classList.toggle('is-active', i === current); s.setAttribute('aria-hidden', String(i !== current)); });
+    Array.from(dots.children).forEach((d, i) => { d.classList.toggle('is-active', i === current); d.setAttribute('aria-current', i === current ? 'true' : 'false'); });
+    slideCount.textContent = `${current + 1} / ${total}`;
+    setTimeout(() => slides.forEach(s => s.classList.remove(...motion)), 760);
+  };
+  const stopAutoplay = () => { clearInterval(autoplay); autoplay = null; };
+  for (let i = 0; i < total; i += 1) {
+    const dot = document.createElement('button');
+    dot.type = 'button'; dot.className = 'dot'; dot.setAttribute('aria-label', `Show slide ${i + 1}`);
+    dot.addEventListener('click', () => { stopAutoplay(); showSlide(i, i >= current ? 1 : -1); });
+    dots.appendChild(dot);
+  }
+  document.getElementById('previous').addEventListener('click', () => { stopAutoplay(); showSlide(current - 1, -1); });
+  document.getElementById('next').addEventListener('click', () => { stopAutoplay(); showSlide(current + 1, 1); });
+  let start = null;
+  carousel.addEventListener('pointerdown', e => { start = e.clientX; });
+  carousel.addEventListener('pointerup', e => {
+    if (start === null) return;
+    const moved = e.clientX - start;
+    if (Math.abs(moved) > 45) { stopAutoplay(); showSlide(current + (moved < 0 ? 1 : -1), moved < 0 ? 1 : -1); }
+    start = null;
+  });
+  carousel.addEventListener('pointercancel', () => { start = null; });
+
+  // The Groove Makers form sends the visitor's details here as they type.
+  addEventListener('message', e => {
+    if (e.origin !== location.origin || !e.data || e.data.type !== 'gm-spotlight') return;
+    const d = e.data;
+    if ('djName' in d) updateText('.js-dj-name', d.djName || 'your DJ name');
+    if ('handle' in d) updateText('.js-dj-handle', '@' + (d.handle || 'yourhandle'));
+    if ('active' in d) {
+      stopAutoplay();
+      if (d.active && !reduced) autoplay = setInterval(() => showSlide(current + 1, 1), 4200);
+    }
+  });
+  // Tell the parent page how tall the card is so it can size and scale the frame.
+  const report = () => parent.postMessage({ type: 'gm-spotlight-height', height: document.documentElement.scrollHeight }, location.origin);
+  new ResizeObserver(report).observe(document.body);
+  addEventListener('load', report);
+  showSlide(0);
+})();
+</script>
+</body>
+</html>
