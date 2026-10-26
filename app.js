@@ -8,7 +8,16 @@ const titles=['African Rhythms','Kazi','Funky Wood','Tarishi','Mashariki','Chant
 const audioSrc={};
 let chosen=null,queued=false,confirmed=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-function jump(p){window.scrollTo({top:journey.offsetTop+(journey.offsetHeight-stage.offsetHeight)*p,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
+const SA=.845,SB=.92;let stretch=1;
+function sizeJourney(){
+ journey.style.height='';const base=journey.offsetHeight-stage.offsetHeight;
+ stretch=Math.max(1,1.5*stage.offsetHeight/((SB-SA)*base));
+ journey.style.height=base*(1+(SB-SA)*(stretch-1))+stage.offsetHeight+'px';
+}
+const toStory=r=>{const u=r*(1+(SB-SA)*(stretch-1));return u<SA?u:u<SA+(SB-SA)*stretch?SA+(u-SA)/stretch:u-(SB-SA)*(stretch-1)};
+const fromStory=p=>(p<SA?p:p<SB?SA+(p-SA)*stretch:p+(SB-SA)*(stretch-1))/(1+(SB-SA)*(stretch-1));
+sizeJourney();addEventListener('resize',sizeJourney);
+function jump(p){p=fromStory(p);window.scrollTo({top:journey.offsetTop+(journey.offsetHeight-stage.offsetHeight)*p,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
 function show(el,opacity,active=false){el.style.opacity=opacity;el.inert=!active;el.style.pointerEvents=active?'auto':'none'}
 const buttons=[];
 for(let i=1;i<=12;i++){
@@ -19,7 +28,7 @@ for(let i=1;i<=12;i++){
 // Scroll sets a target; drawn progress eases toward it each frame, which evens out
 // irregular mobile scroll events. Reduced motion draws the target directly.
 let shown=null,finalT=0,finalShown=0;
-const target=()=>clamp((window.scrollY-journey.offsetTop)/(journey.offsetHeight-stage.offsetHeight));
+const target=()=>toStory(clamp((window.scrollY-journey.offsetTop)/(journey.offsetHeight-stage.offsetHeight)));
 function render(){if(!queued){queued=true;requestAnimationFrame(tick)}}
 function tick(){
  const t=target();
@@ -36,7 +45,7 @@ function draw(p){
  const selected=chosen!==null;
  const bounds=tracks.getBoundingClientRect(),stageW=stage.clientWidth,stageH=stage.clientHeight,vw=stageW,vh=stageH,cols=mobile?3:4,rows=mobile?4:3;
  sleeve.style.transform=`translateX(${-remove*125}%) rotateY(${-15-pull*8-remove*20}deg) rotateZ(${-7-remove*13}deg)`;sleeve.style.opacity=1-remove;
- record.style.transform=`translateX(${28+pull*45-remove*73}%) rotate(${-12+pull*70+remove*35}deg) scale(${1-spread*.7})`;record.style.opacity=1-ease((p-.35)/.08);
+ record.style.transform=`translate(${28+pull*45-remove*73}%,${-4*(1-remove)}%) rotate(${-12+pull*70+remove*35}deg) scale(${1-spread*.7})`;record.style.opacity=1-ease((p-.35)/.08);
  scene.style.transform=`translate(calc(-50% + ${-remove*(mobile?-.05:.14)*stageW}px),calc(-50% + ${-remove*(mobile?.11:0)*stageH}px))`;
  intro.style.opacity=1-ease(p/.2);intro.style.transform=`translateY(${-pull*20}px)`;
  const gridVisible=ease((p-.35)/.05)*(1-form);show(collection,gridVisible,p>=.42&&p<.66);
@@ -168,6 +177,12 @@ $('#reset').onclick=()=>{stopDeck();closeFinal();jump(.52)};
 setArm(ARM_REST);
 // The shared host occasionally drops a request under load: retry an image once.
 document.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{if(!img.dataset.retried){img.dataset.retried=1;setTimeout(()=>{img.src=img.src.split('?')[0]+'?r='+Date.now()},700)}}));
+// Loading screen hand-off: the hero is ready once its sleeve and record are decoded and the
+// headline has its fonts. Then "groove:ready" lets the loader fade out.
+Promise.all([
+ ...['#sleeve img','#heroRecord img'].map(s=>{const i=$(s);return i.decode?i.decode().catch(()=>{}):Promise.resolve()}),
+ new Promise(res=>$('#heroTitle').classList.contains('ready')?res():addEventListener('gm:headline',res,{once:true}))
+]).then(()=>{window.__grooveReady=true;dispatchEvent(new Event('groove:ready'))});
 // Hero headline: each line rotates through its own fonts on its own rhythm
 // (expressive serifs above every 5 s, condensed sans below every 6 s, offset).
 // Every font is fitted to a shared footprint per line and the headline reserves
@@ -188,9 +203,9 @@ document.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{
   h1.style.height=Math.ceil(LINES[0].maxH+LINES[1].maxH)+'px';
  }
  function apply(l){h1.dataset[l.attr]=l.i;l.el.style.fontSize=l.sizes[l.i].px+'px'}
- const loaded=Promise.all(LINES.flatMap(l=>l.fonts).map(f=>document.fonts.load(f,'Old grooves. New possibilities.')));
+ const loaded=Promise.all(LINES.flatMap(l=>l.fonts).map(f=>document.fonts.load(f,'Classic grooves. New possibilities.')));
  Promise.race([loaded,new Promise(r=>setTimeout(r,4000))]).then(()=>{
-  fit();h1.classList.add('ready');
+  fit();h1.classList.add('ready');dispatchEvent(new Event('gm:headline'));
   addEventListener('resize',fit);
   if(reduced.matches)return;
   loaded.then(()=>LINES.forEach(l=>setTimeout(()=>{

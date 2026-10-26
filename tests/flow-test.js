@@ -13,7 +13,7 @@ async function run(name, viewport, opts = {}) {
   await page.goto(URL, { waitUntil: 'networkidle' });
   const r = [];
   const setP = async p => {
-    await page.evaluate(p => { const j = document.querySelector('#journey'); window.scrollTo({ top: j.offsetTop + (j.offsetHeight - innerHeight) * p, behavior: 'instant' }); }, p);
+    await page.evaluate(p => { const j = document.querySelector('#journey'); const s = document.querySelector('.stage'); const r = typeof fromStory === 'function' ? fromStory(p) : p; window.scrollTo({ top: j.offsetTop + (j.offsetHeight - s.offsetHeight) * r, behavior: 'instant' }); }, p);
     await wait(700);
   };
   const state = () => page.evaluate(() => ({
