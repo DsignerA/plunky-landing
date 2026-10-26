@@ -87,7 +87,7 @@ function startDeck(){
  deckOn=true;stage.classList.add('deck-on');$('#onDeck').hidden=false;$('#onDeckText').textContent=`${titles[chosen-1]} · on the turntable`;deckPlay.setAttribute('aria-pressed','true');deckPlay.setAttribute('aria-label','Stop this record');setArm(ARM_START);
  const src=audioSrc[chosen];
  if(src){player.src=src;player.currentTime=0;deckStatus.textContent=`Now playing: ${titles[chosen-1]}`;setTimeout(()=>{if(deckOn)player.play().catch(()=>{deckStatus.textContent='Tap play again to start the preview.'})},700)}
- else deckStatus.textContent=`${titles[chosen-1]} · audio preview coming soon`;
+ else deckStatus.textContent=innerWidth<701?'Audio preview coming soon':`${titles[chosen-1]} · audio preview coming soon`;
 }
 function stopDeck(){
  if(!deckOn)return;

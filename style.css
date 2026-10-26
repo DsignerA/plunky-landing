@@ -174,3 +174,10 @@ html,body{overflow-x:clip}
 @media(hover:hover){.track:focus-visible{outline:1px solid #965736}}
 [data-bottom="1"] .h1-bottom{font-family:'Bebas Neue','DM Sans',sans-serif;font-weight:400;letter-spacing:.01em}
 [data-bottom="3"] .h1-bottom{font-family:'Big Shoulders Display','DM Sans',sans-serif;font-weight:700;letter-spacing:.005em}
+/* Play control sits centred under the turntable, clear of the resting tonearm. */
+.deck-play{right:auto;bottom:auto;left:46.2%;top:100%;transform:translate(-50%,14px)}
+.deck-status{left:0;right:0;margin-top:74px}
+@media(max-width:700px){.deck-play{transform:translate(-50%,8px)}.deck-status{margin-top:50px}}
+@media(max-width:700px){.deck-status{top:100%;left:calc(46.2% + 24px);right:auto;margin-top:18px;text-align:left;white-space:nowrap}}
+@media(max-width:700px){.deck-status{white-space:normal;right:0;margin-top:12px;line-height:1.35}}
+@media(max-width:700px){#selectionTitle.long{font-size:26px;line-height:1.1}.selected-info>p:not(.eyebrow){margin:8px 0}}
