@@ -4,6 +4,8 @@ const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const ease=v=>{v=clamp(v);return v*v*(3-2*v)};
 const colors=['#c55b2b','#a87543','#984232','#d09444','#ac6a47','#bd6c37','#9f563d','#a88850','#c27a42','#874b3c','#b58c56','#c65a35'];
 const titles=['African Rhythms','Kazi','Funky Wood','Tarishi','Mashariki','Chants','Don’t Give Up','Incognito','Poo Too','Liberation Dues','African Rhythms (45 Version Parts 1 & 2)','Afrobeat'];
+// Approved preview files go here, keyed by track number, e.g. 4:'assets/audio/04-tarishi.mp3'.
+const audioSrc={};
 let chosen=null,queued=false,confirmed=false;
 function jump(p){window.scrollTo({top:journey.offsetTop+(journey.offsetHeight-innerHeight)*p,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
 function show(el,opacity,active=false){el.style.opacity=opacity;el.inert=!active;el.style.pointerEvents=active?'auto':'none'}
@@ -11,7 +13,7 @@ const buttons=[];
 for(let i=1;i<=12;i++){
  const n=String(i).padStart(2,'0'),button=document.createElement('button');button.className='track';const title=titles[i-1],short=title.replace(' (45 Version Parts 1 & 2)',' (45)');button.setAttribute('aria-label',`Select track ${n}: ${title}`);
  button.innerHTML=`<div class="record"><div class="label" style="background:${colors[i-1]}"><small>NAME BRAND RECORDS</small><b>${n}</b><span>GROOVE MAKERS</span><i></i></div></div><div class="track-meta"><span><small>${n}</small>${short}</span><span>↗</span></div>`;
- button.onclick=()=>{chosen=i;confirmed=false;$('#selectedNumber').textContent=n;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';$('.modal-record .label').style.background=colors[i-1];$('#signup').hidden=false;$('#confirmation').hidden=true;buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));jump(.76);render()};tracks.append(button);buttons.push(button)
+ button.onclick=()=>{chosen=i;confirmed=false;$('#selectedNumber').textContent=n;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';$('.modal-record .label').style.background=colors[i-1];$('#signup').hidden=false;$('#confirmation').hidden=true;buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));stopDeck();jump(.76);render()};tracks.append(button);buttons.push(button)
 }
 function render(){
  const p=clamp((window.scrollY-journey.offsetTop)/(journey.offsetHeight-innerHeight)),mobile=innerWidth<701;
@@ -38,6 +40,7 @@ function render(){
  show(selectedInfo,selected?select*(1-form):0,selected&&p>=.68&&p<.83);
  show(signupPanel,selected?form:0,selected&&p>=.84);
  show(needTrack,!selected?select:0,!selected&&p>=.7);
+ if(deckOn&&p<.84)stopDeck();
  const phase=p<.2?0:p<.4?1:p<.66?2:p<.84?3:4;
  $('#chapterNo').textContent=['01 / THE ARRIVAL','02 / THE REVEAL','03 / THE COLLECTION','04 / YOUR SELECTION','05 / YOUR NEXT CHAPTER'][phase];
  $('#chapterText').textContent=['Every record holds a story.','Pull something new from the grooves.','Twelve tracks. Where will you take them?','Your sound starts here.',confirmed?'Your record is ready.':'Bring your perspective.'][phase];
@@ -49,5 +52,27 @@ $('#exploreTracks').onclick=e=>{e.preventDefault();jump(.52)};
 document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>jump(Number(b.dataset.step)));
 document.querySelectorAll('.backTracks').forEach(b=>b.onclick=()=>jump(.52));$('.close').onclick=()=>jump(.52);
 $('#continueSignup').onclick=()=>jump(.91);
-$('#signup').onsubmit=e=>{e.preventDefault();const data=new FormData(e.target);$('#modalTitle').textContent=`${data.get('dj')}, meet your record.`;$('#modalDescription').textContent=`${String(chosen).padStart(2,'0')} · ${titles[chosen-1]} / ${data.get('city')}`;$('#signup').hidden=true;$('#confirmation').hidden=false;confirmed=true;render()};$('#reset').onclick=()=>jump(.52);$('#backcoverPick').onclick=()=>jump(.52);
+$('#signup').onsubmit=e=>{e.preventDefault();const data=new FormData(e.target);$('#modalTitle').textContent=`${data.get('dj')}, meet your record.`;$('#modalDescription').textContent=`${String(chosen).padStart(2,'0')} · ${titles[chosen-1]} / ${data.get('city')}`;$('#signup').hidden=true;$('#confirmation').hidden=false;confirmed=true;render()};$('#reset').onclick=()=>{stopDeck();jump(.52)};$('#backcoverPick').onclick=()=>jump(.52);
+// Turntable: the tonearm swings onto the record, the platter spins, and with an
+// approved audio file the arm tracks playback across the grooves.
+const deck=$('#deck'),deckPlay=$('#deckPlay'),deckStatus=$('#deckStatus'),player=new Audio();
+const ARM_REST=0,ARM_START=24,ARM_END=40;
+let deckOn=false;
+const setArm=deg=>deck.style.setProperty('--arm',deg+'deg');
+function startDeck(){
+ if(chosen===null)return;
+ deckOn=true;deck.classList.add('on');deckPlay.setAttribute('aria-pressed','true');deckPlay.setAttribute('aria-label','Stop this record');setArm(ARM_START);
+ const src=audioSrc[chosen];
+ if(src){player.src=src;player.currentTime=0;deckStatus.textContent=`Now playing: ${titles[chosen-1]}`;setTimeout(()=>{if(deckOn)player.play().catch(()=>{deckStatus.textContent='Tap play again to start the preview.'})},700)}
+ else deckStatus.textContent=`${titles[chosen-1]} · audio preview coming soon`;
+}
+function stopDeck(){
+ if(!deckOn)return;
+ deckOn=false;player.pause();deck.classList.remove('on');deckPlay.setAttribute('aria-pressed','false');deckPlay.setAttribute('aria-label','Play this record');setArm(ARM_REST);deckStatus.textContent='';
+}
+player.addEventListener('timeupdate',()=>{if(deckOn&&player.duration)setArm(ARM_START+(ARM_END-ARM_START)*player.currentTime/player.duration)});
+player.addEventListener('ended',stopDeck);
+deckPlay.onclick=()=>deckOn?stopDeck():startDeck();
+$('.platter').onclick=()=>deckOn?stopDeck():startDeck();
+setArm(ARM_REST);
 render();
