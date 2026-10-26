@@ -8,3 +8,15 @@
 @media(max-height:650px) and (min-width:701px){.collection-panel{inset:85px 8% 65px!important}.collection-title .eyebrow{display:none}.collection-title h2{font-size:28px}.signup-panel{inset:90px 10% 65px;padding:0 30px}.signup-panel label{margin:10px 0}.signup-panel input{padding:8px}.scene-nav{bottom:14px}}
 
 .track.selected .record{outline:1px solid #b75a35;outline-offset:3px}
+
+/* Artwork: photographed record and printed sleeve replace the CSS-drawn versions */
+.big{display:block}.big img{display:block;width:100%;height:100%;filter:drop-shadow(8px 16px 22px #29170d66)}
+.sleeve.art{background:none;box-shadow:none;border:0;padding:0;overflow:visible}.sleeve.art:after{display:none}
+.sleeve.art img{display:block;width:100%;height:100%;filter:drop-shadow(6px 14px 22px #3824105c)}
+.track-meta span:first-child{text-align:left;line-height:1.3;padding-right:6px}.track-meta small{display:block;font-size:9px;letter-spacing:1px;opacity:.6}
+#selectionTitle.long{font-size:clamp(30px,3.4vw,48px);letter-spacing:-1.5px}
+.backcover{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:60px;align-items:center;padding:100px 7% 20px}
+.backcover img{width:100%;height:auto;filter:drop-shadow(8px 18px 28px #3824104d)}
+.backcover>div>p:not(.eyebrow){font-size:14px;line-height:1.9;color:#76634e;margin:24px 0 30px}.backcover .primary{width:auto;display:inline-block}
+@media(max-width:700px){.track-meta{font-size:9px}.track-meta small{font-size:8px}.backcover{grid-template-columns:1fr;gap:30px;padding-top:65px}#selectionTitle.long{font-size:30px}}
+@media(max-width:700px){.demo-note{margin-top:16px}}

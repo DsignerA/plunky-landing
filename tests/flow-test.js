@@ -1,6 +1,6 @@
 const { chromium } = require('/Users/macuser/find-the-signal/node_modules/playwright-core');
 const OUT = process.env.SHOTS || "/tmp/gm-shots";
-const URL = 'https://www.bisonboost.com/groovemakers-preview/';
+const URL = process.env.URL || 'https://www.bisonboost.com/groovemakers-preview/';
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 async function run(name, viewport, opts = {}) {

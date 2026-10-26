@@ -3,14 +3,15 @@ const journey=$('#journey'),sleeve=$('#sleeve'),record=$('#heroRecord'),intro=$(
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const ease=v=>{v=clamp(v);return v*v*(3-2*v)};
 const colors=['#c55b2b','#a87543','#984232','#d09444','#ac6a47','#bd6c37','#9f563d','#a88850','#c27a42','#874b3c','#b58c56','#c65a35'];
+const titles=['African Rhythms','Kazi','Funky Wood','Tarishi','Mashariki','Chants','Don’t Give Up','Incognito','Poo Too','Liberation Dues','African Rhythms (45 Version Parts 1 & 2)','Afrobeat'];
 let chosen=null,queued=false,confirmed=false;
 function jump(p){window.scrollTo({top:journey.offsetTop+(journey.offsetHeight-innerHeight)*p,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
 function show(el,opacity,active=false){el.style.opacity=opacity;el.inert=!active;el.style.pointerEvents=active?'auto':'none'}
 const buttons=[];
 for(let i=1;i<=12;i++){
- const n=String(i).padStart(2,'0'),button=document.createElement('button');button.className='track';button.setAttribute('aria-label',`Select Track ${n}`);
- button.innerHTML=`<div class="record"><div class="label" style="background:${colors[i-1]}"><small>NAME BRAND RECORDS</small><b>${n}</b><span>GROOVE MAKERS</span><i></i></div></div><div class="track-meta"><span>TRACK ${n}</span><span>↗</span></div>`;
- button.onclick=()=>{chosen=i;confirmed=false;$('#selectedNumber').textContent=n;$('#selectionTitle').textContent=`Track ${n}.`;$('#modalDescription').textContent=`Your starting point: Track ${n}.`;$('#modalTitle').textContent='Make it yours.';$('.modal-record .label').style.background=colors[i-1];$('#signup').hidden=false;$('#confirmation').hidden=true;buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));jump(.76);render()};tracks.append(button);buttons.push(button)
+ const n=String(i).padStart(2,'0'),button=document.createElement('button');button.className='track';const title=titles[i-1],short=title.replace(' (45 Version Parts 1 & 2)',' (45)');button.setAttribute('aria-label',`Select track ${n}: ${title}`);
+ button.innerHTML=`<div class="record"><div class="label" style="background:${colors[i-1]}"><small>NAME BRAND RECORDS</small><b>${n}</b><span>GROOVE MAKERS</span><i></i></div></div><div class="track-meta"><span><small>${n}</small>${short}</span><span>↗</span></div>`;
+ button.onclick=()=>{chosen=i;confirmed=false;$('#selectedNumber').textContent=n;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';$('.modal-record .label').style.background=colors[i-1];$('#signup').hidden=false;$('#confirmation').hidden=true;buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));jump(.76);render()};tracks.append(button);buttons.push(button)
 }
 function render(){
  const p=clamp((window.scrollY-journey.offsetTop)/(journey.offsetHeight-innerHeight)),mobile=innerWidth<701;
@@ -48,5 +49,5 @@ $('#exploreTracks').onclick=e=>{e.preventDefault();jump(.52)};
 document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>jump(Number(b.dataset.step)));
 document.querySelectorAll('.backTracks').forEach(b=>b.onclick=()=>jump(.52));$('.close').onclick=()=>jump(.52);
 $('#continueSignup').onclick=()=>jump(.91);
-$('#signup').onsubmit=e=>{e.preventDefault();const data=new FormData(e.target);$('#modalTitle').textContent=`${data.get('dj')}, meet your record.`;$('#modalDescription').textContent=`Track ${String(chosen).padStart(2,'0')} / ${data.get('city')}`;$('#signup').hidden=true;$('#confirmation').hidden=false;confirmed=true;render()};$('#reset').onclick=()=>jump(.52);
+$('#signup').onsubmit=e=>{e.preventDefault();const data=new FormData(e.target);$('#modalTitle').textContent=`${data.get('dj')}, meet your record.`;$('#modalDescription').textContent=`${String(chosen).padStart(2,'0')} · ${titles[chosen-1]} / ${data.get('city')}`;$('#signup').hidden=true;$('#confirmation').hidden=false;confirmed=true;render()};$('#reset').onclick=()=>jump(.52);$('#backcoverPick').onclick=()=>jump(.52);
 render();
