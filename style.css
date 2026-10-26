@@ -192,3 +192,30 @@ html,body{overflow-x:clip}
    shadow or filter touches the 3D-tilted elements; Safari then draws no box. */
 .big::before,.sleeve.art::before{display:none}
 .big img,.sleeve.art img{position:absolute;left:-8%;top:-8%;width:116%;height:116%;max-width:none;filter:none}
+
+/* Cosmic hero: navy, cyan/violet light and Plunky sit behind a frosted glass band that
+   densifies with scroll (app.js sets --gm-blur / --gm-glass-opacity). Headline, artwork and
+   navigation are siblings above it, so they stay sharp. The layer fades out as the record is pulled. */
+.gm-hero-bg{--gm-blur:0px;--gm-glass-opacity:0;position:absolute;inset:0;z-index:0;background:#040d23;pointer-events:none;isolation:isolate}
+.gm-backlights,.gm-portrait,.gm-glass{position:absolute;pointer-events:none}
+.gm-backlights{inset:0;z-index:0;background:radial-gradient(ellipse at 77% 30%,rgb(81 224 255 / 55%),transparent 30%),radial-gradient(ellipse at 95% 38%,rgb(130 83 255 / 55%),transparent 32%),radial-gradient(ellipse at 15% 20%,rgb(99 61 220 / 35%),transparent 27%),radial-gradient(ellipse at 45% 60%,rgb(40 90 220 / 25%),transparent 45%)}
+.gm-portrait{z-index:1;left:30%;top:2%;width:40%;height:98%;object-fit:cover;object-position:center 30%;opacity:.55;filter:grayscale(1) sepia(1) saturate(3) hue-rotate(170deg) brightness(.9);mix-blend-mode:screen;-webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 35%,transparent 72%);mask-image:radial-gradient(ellipse at 50% 40%,#000 35%,transparent 72%)}
+.gm-glass{z-index:2;inset:10.5% 0 15%;-webkit-backdrop-filter:blur(var(--gm-blur)) saturate(135%);backdrop-filter:blur(var(--gm-blur)) saturate(135%);background:rgb(164 203 255 / var(--gm-glass-opacity));border-top:1px solid rgb(181 228 255 / 25%);border-bottom:1px solid rgb(103 168 255 / 35%);box-shadow:inset 0 1px 0 rgb(255 255 255 / 10%),inset 0 -15px 40px rgb(5 21 49 / 15%)}
+.gm-glass::after{content:"";position:absolute;inset:0;background:linear-gradient(113deg,transparent 32%,rgb(255 255 255 / 1%) 40%,rgb(209 234 255 / 8%) 48%,transparent 57%)}
+@media(max-width:700px){.gm-portrait{left:6%;width:88%;top:20%;height:70%;object-position:center 25%}}
+/* Light type over navy; colours ease back to the cream palette as the hero fades. */
+.stage header,.stage header *,.intro,.intro *,.chapter,.chapter *,.scrollcue,.scene-nav button{transition:color .5s ease,border-color .5s ease,opacity .2s}
+.cosmic header{border-bottom-color:rgb(181 228 255 / 18%)}
+.cosmic .brand,.cosmic .edition,.cosmic .navcta{color:#f5f8ff}
+.cosmic .intro .eyebrow{color:#7fe3ff}
+.cosmic .h1-top{color:#f5f8ff}
+.cosmic .h1-bottom{color:#8be6ff}
+.cosmic .intro>p:last-child{color:#c3d2ef}
+.cosmic .chapter,.cosmic .chapter *{color:#e6eeff}
+.cosmic .scrollcue{color:#c3d2ef}
+.cosmic .scene-nav button{color:#a9b9da}.cosmic .scene-nav button.active{color:#7fe3ff;border-color:#7fe3ff}
+.cosmic .ambient{opacity:0}
+.cosmic .progress{background:rgb(127 227 255 / 15%)}.cosmic .progress i{background:#7fe3ff}
+.cosmic .big img,.cosmic .sleeve img{filter:none}
+.gm-glass{inset:86px 0 8.5%;border-top:0}
+@media(max-width:700px){.gm-glass{inset:65px 0 9.5%}}

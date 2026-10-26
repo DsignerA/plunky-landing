@@ -8,14 +8,24 @@ const titles=['African Rhythms','Kazi','Funky Wood','Tarishi','Mashariki','Chant
 const audioSrc={};
 let chosen=null,queued=false,confirmed=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-const SA=.845,SB=.92;let stretch=1;
+// Scroll layout, in pixels of page scroll:
+//  [intro]  hero pinned while the frosted glass builds (one screen; none with reduced motion)
+//  [story]  the original timeline, with the Join carousel band (SA-SB) stretched to ~1.5 screens
+const SA=.845,SB=.92;let stretch=1,basePx=1,introPx=0,bandPx=0;
 function sizeJourney(){
- journey.style.height='';const base=journey.offsetHeight-stage.offsetHeight;
- stretch=Math.max(1,1.5*stage.offsetHeight/((SB-SA)*base));
- journey.style.height=base*(1+(SB-SA)*(stretch-1))+stage.offsetHeight+'px';
+ journey.style.height='';const H=stage.offsetHeight;basePx=journey.offsetHeight-H;
+ stretch=Math.max(1,1.5*H/((SB-SA)*basePx));bandPx=(SB-SA)*basePx*stretch;
+ introPx=reduced.matches?0:H;
+ journey.style.height=introPx+basePx+(SB-SA)*basePx*(stretch-1)+H+'px';
 }
-const toStory=r=>{const u=r*(1+(SB-SA)*(stretch-1));return u<SA?u:u<SA+(SB-SA)*stretch?SA+(u-SA)/stretch:u-(SB-SA)*(stretch-1)};
-const fromStory=p=>(p<SA?p:p<SB?SA+(p-SA)*stretch:p+(SB-SA)*(stretch-1))/(1+(SB-SA)*(stretch-1));
+const scrolled=()=>clamp(window.scrollY-journey.offsetTop,0,journey.offsetHeight-stage.offsetHeight);
+const frostAt=px=>introPx?clamp(px/introPx):1;
+function storyAt(px){
+ const x=Math.max(0,px-introPx),a=SA*basePx;
+ return clamp(x<a?x/basePx:x<a+bandPx?SA+(x-a)/(basePx*stretch):SB+(x-a-bandPx)/basePx);
+}
+const storyToPx=p=>introPx+(p<SA?p*basePx:p<SB?SA*basePx+(p-SA)*basePx*stretch:SA*basePx+bandPx+(p-SB)*basePx);
+const fromStory=p=>storyToPx(p)/(journey.offsetHeight-stage.offsetHeight);
 sizeJourney();addEventListener('resize',sizeJourney);
 function jump(p){p=fromStory(p);window.scrollTo({top:journey.offsetTop+(journey.offsetHeight-stage.offsetHeight)*p,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
 function show(el,opacity,active=false){el.style.opacity=opacity;el.inert=!active;el.style.pointerEvents=active?'auto':'none'}
@@ -28,10 +38,18 @@ for(let i=1;i<=12;i++){
 // Scroll sets a target; drawn progress eases toward it each frame, which evens out
 // irregular mobile scroll events. Reduced motion draws the target directly.
 let shown=null,finalT=0,finalShown=0;
-const target=()=>toStory(clamp((window.scrollY-journey.offsetTop)/(journey.offsetHeight-stage.offsetHeight)));
+const target=()=>storyAt(scrolled());
+// Frosted glass over the cosmic hero: blur and density follow raw scroll through the intro band.
+const heroBg=$('#heroBg');let lastFrost=-1;
+function drawFrost(){
+ const f=reduced.matches?.35:frostAt(scrolled()),e=f*f*(3-2*f);
+ if(Math.abs(e-lastFrost)<.002)return;lastFrost=e;
+ heroBg.style.setProperty('--gm-blur',(24*e).toFixed(2)+'px');
+ heroBg.style.setProperty('--gm-glass-opacity',(.28*e).toFixed(3));
+}
 function render(){if(!queued){queued=true;requestAnimationFrame(tick)}}
 function tick(){
- const t=target();
+ const t=target();drawFrost();
  shown=shown===null||reduced.matches||Math.abs(t-shown)<.0005?t:shown+(t-shown)*.28;
  finalShown=reduced.matches||Math.abs(finalT-finalShown)<.002?finalT:finalShown+(finalT-finalShown)*.14;
  draw(shown);
@@ -47,6 +65,7 @@ function draw(p){
  sleeve.style.transform=`translateX(${-remove*125}%) rotateY(${-15-pull*8-remove*20}deg) rotateZ(${-7-remove*13}deg)`;sleeve.style.opacity=1-remove;
  record.style.transform=`translate(${28+pull*45-remove*73}%,${-4*(1-remove)}%) rotate(${-12+pull*70+remove*35}deg) scale(${1-spread*.7})`;record.style.opacity=1-ease((p-.35)/.08);
  scene.style.transform=`translate(calc(-50% + ${-remove*(mobile?-.05:.14)*stageW}px),calc(-50% + ${-remove*(mobile?.11:0)*stageH}px))`;
+ {const cos=1-ease(p/.14);heroBg.style.opacity=cos;stage.classList.toggle('cosmic',cos>.5)}
  intro.style.opacity=1-ease(p/.2);intro.style.transform=`translateY(${-pull*20}px)`;
  const gridVisible=ease((p-.35)/.05)*(1-form);show(collection,gridVisible,p>=.42&&p<.66);
  collectionTitle.style.opacity=1-select;demoNote.style.opacity=1-select;
