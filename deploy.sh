@@ -14,7 +14,9 @@ css=style.$(shasum -a 256 style.css | cut -c1-8).css
 js=app.$(shasum -a 256 app.js | cut -c1-8).js
 cp style.css "$DIST/$css"
 cp app.js "$DIST/$js"
-sed -E "s#href=\"style[^\"]*\.css[^\"]*\"#href=\"$css\"#; s#src=\"app[^\"]*\.js[^\"]*\"#src=\"$js\"#" index.html > "$DIST/index.html"
+spot=spotlight.$(shasum -a 256 spotlight.html | cut -c1-8).html
+cp spotlight.html "$DIST/$spot"
+sed -E "s#src=\"spotlight[^\"]*\.html\"#src=\"$spot\"#; s#href=\"style[^\"]*\.css[^\"]*\"#href=\"$css\"#; s#src=\"app[^\"]*\.js[^\"]*\"#src=\"$js\"#" index.html > "$DIST/index.html"
 grep -q "$css" "$DIST/index.html" && grep -q "$js" "$DIST/index.html"
 
 ts=$(date +%Y%m%d-%H%M%S)
@@ -23,10 +25,10 @@ scp $SSHO -q assets/*.webp otaku:$REMOTE/assets/
 scp $SSHO -q assets/spotlight/* otaku:$REMOTE/assets/spotlight/
 scp $SSHO -q "$DIST/$css" "$DIST/$js" otaku:$REMOTE/
 scp $SSHO -q "$DIST/index.html" otaku:$REMOTE/.index.html.new
-scp $SSHO -q spotlight.html otaku:$REMOTE/.spotlight.html.new
-ssh $SSHO otaku "cd $REMOTE && chmod 755 assets/spotlight && chmod 644 $css $js assets/*.webp assets/spotlight/* .index.html.new .spotlight.html.new && mv -f .spotlight.html.new spotlight.html && mv -f .index.html.new index.html"
+scp $SSHO -q "$DIST/$spot" otaku:$REMOTE/
+ssh $SSHO otaku "cd $REMOTE && chmod 755 assets/spotlight && chmod 644 $css $js assets/*.webp assets/spotlight/* .index.html.new $spot && mv -f .index.html.new index.html"
 
-for f in "" "$css" "$js" spotlight.html; do
+for f in "" "$css" "$js" "$spot"; do
   code=$(curl -s -o /dev/null -w "%{http_code}" "https://www.bisonboost.com/groovemakers-preview/$f")
   echo "$code /groovemakers-preview/$f"
   [ "$code" = 200 ] || { echo "verify failed"; exit 1; }

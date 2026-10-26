@@ -13,8 +13,8 @@ function show(el,opacity,active=false){el.style.opacity=opacity;el.inert=!active
 const buttons=[];
 for(let i=1;i<=12;i++){
  const n=String(i).padStart(2,'0'),button=document.createElement('button');button.className='track';const title=titles[i-1],short=title.replace(' (45 Version Parts 1 & 2)',' (45)');button.setAttribute('aria-label',`Select track ${n}: ${title}`);
- button.innerHTML=`<div class="record photo"><img src="assets/vinyl.webp" alt="" width="720" height="720" decoding="async"></div><div class="track-meta"><span><small>${n}</small>${short}</span><span>↗︎</span></div>`;
- button.onclick=()=>{chosen=i;confirmed=false;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';closeFinal();buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));stopDeck();jump(.76);render()};tracks.append(button);button._meta=button.querySelector('.track-meta');buttons.push(button)
+ button.innerHTML=`<div class="record photo"><img src="assets/vinyl-v2.webp" alt="" width="720" height="720" decoding="async"></div><div class="track-meta"><span><small>${n}</small>${short}</span><span>↗︎</span></div>`;
+ button.onclick=()=>{chosen=i;confirmed=false;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';closeFinal();buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));stopDeck();jump(.76);render()};button.addEventListener('pointerdown',e=>{button._down=e.pointerType==='touch'?[e.clientX,e.clientY]:null});button.addEventListener('pointerup',e=>{const d=button._down;button._down=null;if(d&&Math.hypot(e.clientX-d[0],e.clientY-d[1])<10&&button._live){e.preventDefault();button._tapped=Date.now();button.onclick()}});button.addEventListener('click',e=>{if(Date.now()-(button._tapped||0)<600)e.stopImmediatePropagation()},true);tracks.append(button);button._meta=button.querySelector('.track-meta');buttons.push(button)
 }
 // Scroll sets a target; drawn progress eases toward it each frame, which evens out
 // irregular mobile scroll events. Reduced motion draws the target directly.
@@ -32,7 +32,7 @@ const chapterNo=$('#chapterNo'),chapterText=$('#chapterText'),chapter=$('.chapte
 const setText=(el,v)=>{if(el.textContent!==v)el.textContent=v};
 function draw(p){
  const mobile=innerWidth<701;
- const pull=ease(p/.22),remove=ease((p-.2)/.17),spread=ease((p-.33)/.14),select=ease((p-.63)/.12),form=ease((p-.79)/.06),glassIn=ease((p-.86)/.06);
+ const pull=ease(p/.22),remove=ease((p-.2)/.17),spread=ease((p-.33)/.14),select=ease((p-.63)/.12),form=ease((p-.79)/.05),slideP=clamp((p-.845)/.075),glassIn=ease((p-.925)/.045);
  const selected=chosen!==null;
  const bounds=tracks.getBoundingClientRect(),stageW=stage.clientWidth,stageH=stage.clientHeight,vw=stageW,vh=stageH,cols=mobile?3:4,rows=mobile?4:3;
  sleeve.style.transform=`translateX(${-remove*125}%) rotateY(${-15-pull*8-remove*20}deg) rotateZ(${-7-remove*13}deg)`;sleeve.style.opacity=1-remove;
@@ -42,21 +42,23 @@ function draw(p){
  const gridVisible=ease((p-.35)/.05)*(1-form);show(collection,gridVisible,p>=.42&&p<.66);
  collectionTitle.style.opacity=1-select;demoNote.style.opacity=1-select;
  const cellW=bounds.width/cols,cellH=bounds.height/rows;
- const size=Math.max(40,Math.min(cellW*(mobile?.73:.7),cellH-(mobile?24:30),mobile?115:165));
+ const btnW=cellW*.94;if(buttons[0]._w!==btnW){buttons.forEach(b=>{b._w=btnW;b.style.width=btnW+'px'})}
+ const metaH=buttons[0]._meta.offsetHeight+(mobile?6:12),size=Math.max(40,Math.min(cellW*(mobile?.73:.7),cellH-metaH-(mobile?8:14),mobile?115:165));
  let deckArgs=null;
  buttons.forEach((button,i)=>{
-  const col=i%cols,row=Math.floor(i/cols),gridX=(col+.5)*cellW-size/2,gridY=(row+.5)*cellH-size/2;
-  const stackX=bounds.width/2-size/2,stackY=bounds.height/2-size/2;
+  const col=i%cols,row=Math.floor(i/cols),gridX=(col+.5)*cellW-btnW/2,gridY=(row+.5)*cellH-(size+metaH)/2;
+  const stackX=bounds.width/2-btnW/2,stackY=bounds.height/2-(size+metaH)/2;
   let x=stackX+(gridX-stackX)*spread,y=stackY+(gridY-stackY)*spread,scale=2.2-1.2*spread,opacity=1;
-  if(select>0){if(selected&&i===chosen-1){const desired=mobile?Math.min(vw*.42,vh*.27):Math.min(vw*.18,vh*.32);const targetX=(mobile?vw*.5:vw*.26)-bounds.left-size/2,targetY=(mobile?vh*.39:vh*.5)-bounds.top-size/2;x+=(targetX-x)*select;y+=(targetY-y)*select;scale+=(desired/size-scale)*select;}else{opacity=1-select;scale*=1-select*.2}}
-  if(button._size!==size){button._size=size;button.style.width=size+'px';button.style.height=size+24+'px';}button.style.transform=`translate(${x}px,${y}px) rotate(${(1-spread)*(i-5.5)*6}deg) scale(${scale})`;button.style.opacity=opacity;const live=p>=.43&&p<.66;if(button._live!==live){button._live=live;button.style.pointerEvents=live?'auto':'none';button.tabIndex=live?0:-1;}button._meta.style.opacity=1-select;
-  if(selected&&i===chosen-1)deckArgs=[bounds.left+x+size/2,bounds.top+y+(size+24)/2-12*scale,size*scale];
+  if(select>0){if(selected&&i===chosen-1){const desired=mobile?Math.min(vw*.42,vh*.27):Math.min(vw*.18,vh*.32);const targetX=(mobile?vw*.5:vw*.26)-bounds.left-btnW/2,targetY=(mobile?vh*.39:vh*.5)-bounds.top-size/2;x+=(targetX-x)*select;y+=(targetY-y)*select;scale+=(desired/size-scale)*select;}else{opacity=1-select;scale*=1-select*.2}}
+  if(button._size!==size||button._metaH!==metaH){button._size=size;button._metaH=metaH;button.style.setProperty('--rec',size+'px');button.style.height=size+metaH+'px';}button.style.transform=`translate(${x}px,${y}px) rotate(${(1-spread)*(i-5.5)*6}deg) scale(${scale})`;button.style.opacity=opacity;const live=p>=.43&&p<.66;if(button._live!==live){button._live=live;button.style.pointerEvents=live?'auto':'none';button.tabIndex=live?0:-1;}button._meta.style.opacity=1-select;
+  if(selected&&i===chosen-1)deckArgs=[bounds.left+x+btnW/2,bounds.top+y+(size+metaH)/2-metaH/2*scale,size*scale];
  });
- if(deckArgs)placeDeck(...deckArgs,select*(1-form),p>=.68&&p<.83);else{deckBase.style.opacity=deckTop.style.opacity=deckSleeve.style.opacity=0;deckTop.inert=true;stage.classList.remove('deck-shown')}
+ if(deckArgs)placeDeck(...deckArgs,select*clamp(1-form*2.2),p>=.68&&p<.83);else{deckBase.style.opacity=deckTop.style.opacity=deckSleeve.style.opacity=0;deckTop.inert=true;stage.classList.remove('deck-shown')}
  // The selected record remains in the same stage while its form arrives.
  if(selected&&p>=.66){collection.inert=false;collection.style.pointerEvents='none';}
- show(selectedInfo,selected?select*(1-form):0,selected&&p>=.68&&p<.83);
- if(finalT&&p<.84)closeFinal();
+ show(selectedInfo,selected?select*clamp(1-form*2.2):0,selected&&p>=.68&&p<.83);
+ if(finalT&&p<.8)closeFinal();
+ if(selected&&form>.9&&glassIn<.5&&!finalT){const k=Math.min(4,Math.floor(slideP*5));if(k!==scrollSlide){scrollSlide=k;toSpot({slide:k})}}else if(p<.8)scrollSlide=-1;
  placeJoin(selected?form:0,selected?glassIn:0,mobile,vw,vh);
  show(needTrack,!selected?select:0,!selected&&p>=.7);
  if(deckOn&&p<.64)stopDeck();
@@ -72,7 +74,7 @@ stage.addEventListener('scroll',()=>{if(stage.scrollTop||stage.scrollLeft){stage
 $('#exploreTracks').onclick=e=>{e.preventDefault();jump(.52)};
 document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>jump(Number(b.dataset.step)));
 document.querySelectorAll('.backTracks').forEach(b=>b.onclick=()=>jump(.52));$('.close').onclick=()=>jump(.52);
-$('#continueSignup').onclick=()=>jump(.93);
+$('#continueSignup').onclick=()=>jump(.975);
 $('#backcoverPick').onclick=()=>jump(.52);
 // Turntable: the selected record lands on the platter; play drops the tonearm and spins it.
 // With an approved audio file the arm tracks playback across the grooves.
@@ -107,7 +109,7 @@ $('#onDeck').onclick=stopDeck;
 // 2) A frosted glass panel with the form slides over it; the form drives the post live.
 // 3) Submitting brings the finished post forward as the final view.
 const spotStage=$('#spotStage'),spotlight=$('#spotlight'),spotFrame=$('#spotlightFrame'),signup=$('#signup'),finalBar=$('#confirmation');
-let spotHeight=640,spotActive=null,photoURL=null;
+let spotHeight=640,spotActive=null,photoURL=null,scrollSlide=-1;
 const toSpot=msg=>{try{spotFrame.contentWindow.postMessage({type:'gm-spotlight',...msg},location.origin)}catch(e){}};
 const lerp=(a,b,t)=>a+(b-a)*t;
 function placeJoin(cardIn,glassIn,mobile,vw,vh){
@@ -132,7 +134,7 @@ function placeJoin(cardIn,glassIn,mobile,vw,vh){
  show(finalBar,f,f>.9);
  stage.classList.toggle('sheet-up',mobile&&g>.05);
  // The post rotates its slides while nobody is filling in the form.
- const a=cardIn>.9&&(glassIn<.2||finalT===1);
+ const a=cardIn>.9&&finalT===1;
  if(a!==spotActive){spotActive=a;toSpot({active:a})}
 }
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.type==='gm-spotlight-height'){spotHeight=e.data.height;spotFrame.style.height=spotHeight+'px';syncSpotlight();render()}});
@@ -166,4 +168,41 @@ $('#reset').onclick=()=>{stopDeck();closeFinal();jump(.52)};
 setArm(ARM_REST);
 // The shared host occasionally drops a request under load: retry an image once.
 document.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{if(!img.dataset.retried){img.dataset.retried=1;setTimeout(()=>{img.src=img.src.split('?')[0]+'?r='+Date.now()},700)}}));
+// Hero headline: each line rotates through its own fonts on its own rhythm
+// (expressive serifs above every 5 s, condensed sans below every 6 s, offset).
+// Every font is fitted to a shared footprint per line and the headline reserves
+// the tallest top + bottom combination, so nothing around it moves.
+(()=>{
+ const h1=$('#heroTitle'),inner=h1.querySelector('.h1-inner');
+ const LINES=[
+  {el:h1.querySelector('.h1-top'),attr:'top',every:5000,delay:5000,fonts:['italic 500 100px "Cormorant Garamond"','italic 400 100px "Instrument Serif"','400 100px "DM Serif Display"','400 100px "Italiana"']},
+  {el:h1.querySelector('.h1-bottom'),attr:'bottom',every:6000,delay:7500,fonts:['600 100px "Barlow Condensed"','400 100px "Bebas Neue"','500 100px "Oswald"','700 100px "Big Shoulders Display"']}];
+ LINES.forEach(l=>{l.i=0;l.sizes=[]});
+ function fit(){
+  const mobile=innerWidth<701,W=mobile?stage.clientWidth*.86:Math.min(stage.clientWidth*.4,600);
+  const spec=[{w:W*(mobile?.86:.78),max:mobile?62:110},{w:W*(mobile?.98:.94),max:mobile?64:112}];
+  LINES.forEach((l,k)=>{
+   l.sizes=l.fonts.map((_,i)=>{h1.dataset[l.attr]=i;l.el.style.fontSize='100px';const px=Math.min(spec[k].max,100*spec[k].w/l.el.scrollWidth);l.el.style.fontSize=px+'px';return {px,h:l.el.offsetHeight+parseFloat(getComputedStyle(l.el).marginTop)}});
+   l.maxH=Math.max(...l.sizes.map(z=>z.h));apply(l);
+  });
+  h1.style.height=Math.ceil(LINES[0].maxH+LINES[1].maxH)+'px';
+ }
+ function apply(l){h1.dataset[l.attr]=l.i;l.el.style.fontSize=l.sizes[l.i].px+'px'}
+ const loaded=Promise.all(LINES.flatMap(l=>l.fonts).map(f=>document.fonts.load(f,'Old grooves. New possibilities.')));
+ Promise.race([loaded,new Promise(r=>setTimeout(r,4000))]).then(()=>{
+  fit();h1.classList.add('ready');
+  addEventListener('resize',fit);
+  if(reduced.matches)return;
+  loaded.then(()=>LINES.forEach(l=>setTimeout(()=>{
+   const step=()=>{
+    if(document.hidden||parseFloat(intro.style.opacity||1)<.05)return;
+    l.el.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-8px)'}],{duration:500,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).finished.then(()=>{
+     l.i=(l.i+1)%l.fonts.length;apply(l);
+     l.el.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:700,easing:'cubic-bezier(.2,.7,.2,1)',fill:'forwards'});
+    });
+   };
+   step();setInterval(step,l.every);
+  },l.delay)));
+ });
+})();
 render();
