@@ -228,3 +228,11 @@ html,body{overflow-x:clip}
 #journey.cosmic-under{background-color:#040d23}
 /* Phones with short screens: size the album by height so it never covers the intro copy. */
 @media(max-width:700px){.scene{width:min(60vw,34svh)}}
+/* iPhone Safari: the stage fills the *large* viewport so nothing shows beneath it when the
+   toolbar collapses. Items pinned to the bottom are lifted by the toolbar's current height
+   (100lvh - 100dvh), so they stay visible while the toolbar is showing. */
+@supports (height:100lvh) and (height:100dvh){
+ .stage{height:100lvh;--ui-lift:calc(100lvh - 100dvh)}
+ .chapter,.scrollcue,.progress,.scene-nav{translate:0 calc(-1 * var(--ui-lift))}
+ @media(max-width:700px){.signup-panel.glass,.final-bar{translate:0 calc(-1 * var(--ui-lift))}}
+}
