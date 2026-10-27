@@ -1,0 +1,2 @@
+import {defineConfig} from 'vite';
+export default defineConfig({base:'./',server:{allowedHosts:['terminal.local']},build:{outDir:'../discovery-build',emptyOutDir:true,rollupOptions:{output:{manualChunks(id){if(id.includes('@shadergradient'))return 'gradient';if(id.includes('@paper-design'))return 'paper';if(id.includes('/three/')||id.includes('@react-three'))return 'scene';if(id.includes('/react/')||id.includes('/react-dom/'))return 'react';}}}}});

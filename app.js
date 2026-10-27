@@ -12,7 +12,7 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 //  [intro]  hero pinned while the frosted glass builds (one screen; none with reduced motion)
 //  [story]  the original timeline, with some bands given extra scroll (in screens):
 //           the selected record on the turntable, and the Join carousel.
-const BANDS=[{a:.47,b:.6,screens:1.4},{a:.73,b:.79,screens:2.6},{a:.845,b:.92,screens:1.5}];
+const BANDS=[{a:.47,b:.6,screens:3.6},{a:.73,b:.79,screens:2.6},{a:.845,b:.92,screens:1.5}];
 let basePx=1,introPx=0,segs=[];
 function sizeJourney(){
  journey.style.height='';const H=stage.offsetHeight;basePx=journey.offsetHeight-H;
@@ -42,16 +42,59 @@ sizeJourney();addEventListener('resize',()=>{sizeJourney();fitHeroScene()});
 function jump(p){p=fromStory(p);window.scrollTo({top:journey.offsetTop+(journey.offsetHeight-stage.offsetHeight)*p,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
 function show(el,opacity,active=false){el.style.opacity=opacity;el.inert=!active;el.style.pointerEvents=active?'auto':'none'}
 const buttons=[];
+let manualPick=false;
+function chooseRecord(i){
+ if(chosen===i)return;
+ chosen=i;confirmed=false;const title=titles[i-1],n=String(i).padStart(2,'0');
+ $('#selectionTitle').textContent=title+'.';$('#selectionTitle').classList.toggle('long',title.length>20);
+ $('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';
+ closeFinal();stopDeck();buttons.forEach((b,j)=>{b.classList.toggle('selected',j===i-1);b.setAttribute('aria-pressed',String(j===i-1))});
+ syncPlayerBrowser();
+ const hint=$('.collection-title>p:last-child');hint.textContent=`${n} / 12 · ${title} — scroll to browse, tap to open.`;
+}
+
 for(let i=1;i<=12;i++){
  const n=String(i).padStart(2,'0'),button=document.createElement('button');button.className='track';const title=titles[i-1],short=title.replace(' (45 Version Parts 1 & 2)',' (45)');button.setAttribute('aria-label',`Select track ${n}: ${title}`);
  button.innerHTML=`<div class="record photo"><img src="assets/vinyl-v2.webp" alt="" width="720" height="720" decoding="async"></div><div class="track-meta"><span><small>${n}</small>${short}</span><span>↗︎</span></div>`;
- button.onclick=()=>{chosen=i;confirmed=false;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';closeFinal();buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));stopDeck();jump(.76);render()};button.addEventListener('click',e=>{if(Date.now()-(button._tapped||0)<600)e.stopImmediatePropagation()},true);tracks.append(button);button._meta=button.querySelector('.track-meta');buttons.push(button)
+ button.onclick=()=>{manualPick=true;chooseRecord(i);jump(.76);render()};button.addEventListener('click',e=>{if(Date.now()-(button._tapped||0)<600)e.stopImmediatePropagation()},true);tracks.append(button);button._meta=button.querySelector('.track-meta');buttons.push(button)
 }
+// A native continuous range controls a lightweight translating ruler.
+// Only crossing a track boundary updates selection; no scroll jump is involved.
+const trackTuner=$('#trackTuner'),tunerScale=$('#tunerScale');let tuning=false;
+for(let i=0;i<89;i++){
+ const tick=document.createElement('i');tick.className=i%8===0?'major-tick':'minor-tick';
+ if(i%8===0){const label=document.createElement('span');label.textContent=String(i/8+1).padStart(2,'0');tick.append(label)}
+ tunerScale.append(tick);
+}
+function moveTuner(value){tunerScale.style.setProperty('--dial-offset',((value-1)/11*704)+'px');trackTuner.dispatchEvent(new Event('tuner:move'))}
+function syncPlayerBrowser(){
+ if(!chosen)return;
+ const title=titles[chosen-1];$('#playerRecordCount').textContent=String(chosen).padStart(2,'0')+' / 12';
+ $('#continueSignup').textContent='Continue with '+title.replace(' (45 Version Parts 1 & 2)',' (45)')+' ↗';
+ $('#previousRecord').disabled=chosen===1;$('#nextRecord').disabled=chosen===titles.length;
+ trackTuner.setAttribute('aria-valuetext',String(chosen).padStart(2,'0')+' '+title);
+ if(!tuning){trackTuner.value=chosen;moveTuner(chosen)}
+}
+function stepPlayer(direction){manualPick=true;chooseRecord(clamp(chosen+direction,1,12));render()}
+$('#previousRecord').onclick=()=>stepPlayer(-1);
+$('#nextRecord').onclick=()=>stepPlayer(1);
+trackTuner.addEventListener('input',()=>{
+ tuning=true;manualPick=true;const value=Number(trackTuner.value);moveTuner(value);
+ const next=Math.round(value);if(next!==chosen){chooseRecord(next);render()}
+});
+function settleTuner(){tuning=false;trackTuner.value=chosen;moveTuner(chosen)}
+trackTuner.addEventListener('change',settleTuner);
+trackTuner.addEventListener('blur',settleTuner);
 // Scroll sets a target; drawn progress eases toward it each frame, which evens out
 // irregular mobile scroll events. Reduced motion draws the target directly.
 let shown=null,finalT=0,finalShown=0;
 const GRID_HOLD=.6;
-const target=()=>{const p=storyAt(scrolled());return chosen===null?Math.min(p,GRID_HOLD):p};
+const target=()=>{
+ const p=storyAt(scrolled());
+ if(p>=.47&&p<=.6&&!manualPick)chooseRecord(Math.min(12,1+Math.floor(clamp((p-.47)/.13)*12)));
+ if(p>.66||p<.43)manualPick=false;
+ return chosen===null?Math.min(p,GRID_HOLD):p;
+};
 // Frosted glass over the cosmic hero: blur and density follow raw scroll through the intro band.
 const heroBg=$('#heroBg');let lastFrost=-1;
 function drawFrost(){
@@ -90,11 +133,12 @@ function draw(p){
   const col=i%cols,row=Math.floor(i/cols),gridX=(col+.5)*cellW-btnW/2,gridY=(row+.5)*cellH-(size+metaH)/2;
   const stackX=bounds.width/2-btnW/2,stackY=bounds.height/2-(size+metaH)/2;
   let x=stackX+(gridX-stackX)*spread,y=stackY+(gridY-stackY)*spread,scale=2.2-1.2*spread,opacity=1;
-  if(select>0){if(selected&&i===chosen-1){const desired=mobile?Math.min(vw*.42,vh*.27):Math.min(vw*.18,vh*.32);const targetX=(mobile?vw*.5:vw*.26)-bounds.left-btnW/2,targetY=(mobile?vh*.39:vh*.5)-bounds.top-size/2;x+=(targetX-x)*select;y+=(targetY-y)*select;scale+=(desired/size-scale)*select;}else{opacity=1-select;scale*=1-select*.2}}
+  if(select>0){if(selected&&i===chosen-1){const desired=mobile?Math.min(vw*.47,vh*.235):Math.min(vw*.18,vh*.32);const targetX=(mobile?vw*.5:vw*.26)-bounds.left-btnW/2,targetY=(mobile?vh*.29:vh*.5)-bounds.top-size/2;x+=(targetX-x)*select;y+=(targetY-y)*select;scale+=(desired/size-scale)*select;}else{opacity=1-select;scale*=1-select*.2}}
   if(button._size!==size||button._metaH!==metaH){button._size=size;button._metaH=metaH;button.style.setProperty('--rec',size+'px');button.style.height=size+metaH+'px';}button.style.transform=`translate(${x}px,${y}px) rotate(${(1-spread)*(i-5.5)*6}deg) scale(${scale})`;button.style.opacity=opacity;const live=p>=.43&&p<.66;if(button._live!==live){button._live=live;button.style.pointerEvents=live?'auto':'none';button.tabIndex=live?0:-1;}button._meta.style.opacity=1-select;
   if(selected&&i===chosen-1)deckArgs=[bounds.left+x+btnW/2,bounds.top+y+(size+metaH)/2-metaH/2*scale,size*scale];
  });
  if(deckArgs)placeDeck(...deckArgs,select*clamp(1-form*2.2),p>=.68&&p<.83);else{deckBase.style.opacity=deckTop.style.opacity=deckSleeve.style.opacity=0;deckTop.inert=true;stage.classList.remove('deck-shown')}
+ if(p>=.67){deckBase.style.opacity=deckTop.style.opacity=deckSleeve.style.opacity=0;deckTop.inert=true;collection.style.opacity=0;}
  // The selected record remains in the same stage while its form arrives.
  if(selected&&p>=.66){collection.inert=false;collection.style.pointerEvents='none';}
  show(selectedInfo,selected?select*clamp(1-form*2.2):0,selected&&p>=.68&&p<.83);
@@ -125,32 +169,32 @@ stage.addEventListener('touchend',e=>{
 fitHeroScene();addEventListener('gm:headline',fitHeroScene);
 // Older Safari lacks overflow:clip; undo any focus-driven scroll of the pinned stage.
 stage.addEventListener('scroll',()=>{if(stage.scrollTop||stage.scrollLeft){stage.scrollTop=0;stage.scrollLeft=0}});addEventListener('resize',render);
-$('#exploreTracks').onclick=e=>{e.preventDefault();jump(.52)};
+$('#exploreTracks').onclick=e=>{e.preventDefault();jump(.47)};
 document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>jump(Number(b.dataset.step)));
-document.querySelectorAll('.backTracks').forEach(b=>b.onclick=()=>jump(.52));$('.close').onclick=()=>jump(.52);
+document.querySelectorAll('.backTracks').forEach(b=>b.onclick=()=>jump(.47));$('.close').onclick=()=>jump(.47);
 $('#continueSignup').onclick=()=>jump(.975);
-$('#backcoverPick').onclick=()=>jump(.52);
+$('#backcoverPick').onclick=()=>jump(.47);
 // Turntable: the selected record lands on the platter; play drops the tonearm and spins it.
 // With an approved audio file the arm tracks playback across the grooves.
 const deckSleeve=$('#deckSleeve'),deckBase=$('#deckBase'),deckTop=$('#deckTop'),deckPlay=$('#deckPlay'),deckStatus=$('#deckStatus'),player=new Audio();
-const ARM_REST=-46,ARM_START=-17,ARM_END=2;
+const ARM_REST=-14,ARM_START=12,ARM_END=30;
 let deckOn=false;
-const setArm=deg=>deckTop.style.setProperty('--arm',deg+'deg');
+const setArm=deg=>{deckTop.style.setProperty('--arm',deg+'deg');selectedInfo.style.setProperty('--listening-arm',deg+'deg')};
 function startDeck(){
  if(chosen===null)return;
- deckOn=true;stage.classList.add('deck-on');$('#onDeck').hidden=false;$('#onDeckText').textContent=`${titles[chosen-1]} · on the turntable`;deckPlay.setAttribute('aria-pressed','true');deckPlay.setAttribute('aria-label','Stop this record');setArm(ARM_START);
+ deckOn=true;stage.classList.add('deck-on');$('#listeningMotion').setAttribute('aria-pressed','true');$('#listeningMotion').textContent='Pause motion';$('#onDeck').hidden=false;$('#onDeckText').textContent=`${titles[chosen-1]} · on the turntable`;deckPlay.setAttribute('aria-pressed','true');deckPlay.setAttribute('aria-label','Stop this record');setArm(ARM_START);
  const src=audioSrc[chosen];
  if(src){player.src=src;player.currentTime=0;deckStatus.textContent='';setTimeout(()=>{if(deckOn)player.play().catch(()=>{deckStatus.textContent='Tap play again to start the preview.'})},700)}
  else deckStatus.textContent='';
 }
 function stopDeck(){
  if(!deckOn)return;
- deckOn=false;player.pause();stage.classList.remove('deck-on');$('#onDeck').hidden=true;deckPlay.setAttribute('aria-pressed','false');deckPlay.setAttribute('aria-label','Play this record');setArm(ARM_REST);deckStatus.textContent='';
+ deckOn=false;$('#listeningMotion').setAttribute('aria-pressed','false');$('#listeningMotion').textContent='Preview motion';player.pause();stage.classList.remove('deck-on');$('#onDeck').hidden=true;deckPlay.setAttribute('aria-pressed','false');deckPlay.setAttribute('aria-label','Play this record');setArm(ARM_REST);deckStatus.textContent='';
 }
 // Size and place the deck so its platter sits under the selected record's current position.
 function placeDeck(cx,cy,diameter,opacity,active){
- const w=diameter/.4685,left=cx-.4622*w,top=cy-.3027*w,h=w/1.5,mobile=innerWidth<701;
- const sz=mobile?h*.62:h*.94,sx=mobile?left+w*.58:left+w*.8,sy=mobile?top-sz*.45:top+h*.03,slide=(1-opacity)*sz*.35;
+ const w=diameter/.68,left=cx-.493*w,top=cy-.485*w,h=w,mobile=innerWidth<701;
+ const sz=mobile?h*.54:h*.94,sx=mobile?left+w*.62:left+w*.8,sy=mobile?Math.max(86,top-h*.16):top+h*.03,slide=(1-opacity)*sz*.35;
  deckSleeve.style.width=sz+'px';deckSleeve.style.transform=`translate(${sx-slide}px,${sy}px) rotate(${mobile?8:3}deg)`;deckSleeve.style.opacity=opacity;
  for(const el of [deckBase,deckTop]){el.style.width=w+'px';el.style.transform=`translate(${left}px,${top}px)`;el.style.opacity=opacity}
  deckTop.inert=!active;stage.classList.toggle('deck-shown',opacity>.5);
@@ -158,6 +202,7 @@ function placeDeck(cx,cy,diameter,opacity,active){
 player.addEventListener('timeupdate',()=>{if(deckOn&&player.duration)setArm(ARM_START+(ARM_END-ARM_START)*player.currentTime/player.duration)});
 player.addEventListener('ended',stopDeck);
 deckPlay.onclick=()=>deckOn?stopDeck():startDeck();
+$('#listeningMotion').onclick=()=>deckOn?stopDeck():startDeck();
 $('#onDeck').onclick=stopDeck;
 // Join step. 1) The DJ Spotlight post (same card as /groove-makers/dj/) arrives large.
 // 2) A frosted glass panel with the form slides over it; the form drives the post live.
@@ -218,16 +263,16 @@ signup.onsubmit=e=>{
 };
 function closeFinal(){if(!finalT&&finalBar.hidden)return;finalT=0;confirmed=false;spotActive=null;setTimeout(()=>{if(!finalT)finalBar.hidden=true},700);render()}
 $('#editDetails').onclick=()=>{closeFinal();setTimeout(()=>signup.dj.focus({preventScroll:true}),450)};
-$('#reset').onclick=()=>{stopDeck();closeFinal();jump(.52)};
+$('#reset').onclick=()=>{stopDeck();closeFinal();jump(.47)};
 setArm(ARM_REST);
 // The shared host occasionally drops a request under load: retry an image once.
 document.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{if(!img.dataset.retried){img.dataset.retried=1;setTimeout(()=>{img.src=img.src.split('?')[0]+'?r='+Date.now()},700)}}));
 // Loading screen hand-off: the hero is ready once its sleeve and record are decoded and the
-// headline has its fonts, and the loader has shown for at least 4.5 s. Then "groove:ready" lets it fade out.
+// headline has its fonts. No artificial minimum wait; the loader fails open after 8 seconds.
 Promise.all([
  ...['#sleeve img','#heroRecord img'].map(s=>{const i=$(s);return i.decode?i.decode().catch(()=>{}):Promise.resolve()}),
  new Promise(res=>$('#heroTitle').classList.contains('ready')?res():addEventListener('gm:headline',res,{once:true}))
-]).then(()=>setTimeout(()=>{window.__grooveReady=true;dispatchEvent(new Event('groove:ready'))},Math.max(0,4500-performance.now())));
+]).then(()=>{window.__grooveReady=true;dispatchEvent(new Event('groove:ready'))});
 // Hero headline: each line rotates through its own fonts on its own rhythm
 // (expressive serifs above every 5 s, condensed sans below every 6 s, offset).
 // Every font is fitted to a shared footprint per line and the headline reserves
@@ -271,3 +316,9 @@ Promise.all([
  });
 })();
 render();
+// The discovery scene passes a catalog index, never user-authored markup.
+const discoveryTrack=Number(new URLSearchParams(location.search).get('grooveTrack'));
+if(Number.isInteger(discoveryTrack)&&discoveryTrack>=1&&discoveryTrack<=12){
+ const enterDiscoveredTrack=()=>{sizeJourney();manualPick=true;chooseRecord(discoveryTrack);window.scrollTo({top:journey.offsetTop+storyToPx(.76),behavior:'instant'});shown=.76;render()};
+ if(window.__grooveReady)enterDiscoveredTrack();else addEventListener('groove:ready',enterDiscoveredTrack,{once:true});
+}
