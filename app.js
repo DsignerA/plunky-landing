@@ -26,7 +26,13 @@ function storyAt(px){
 }
 const storyToPx=p=>introPx+(p<SA?p*basePx:p<SB?SA*basePx+(p-SA)*basePx*stretch:SA*basePx+bandPx+(p-SB)*basePx);
 const fromStory=p=>storyToPx(p)/(journey.offsetHeight-stage.offsetHeight);
-sizeJourney();addEventListener('resize',sizeJourney);
+function fitHeroScene(){
+ if(innerWidth>=701){scene.style.width=scene.style.top='';return}
+ const st=stage.getBoundingClientRect(),copy=intro.getBoundingClientRect(),cap=chapter.getBoundingClientRect();
+ const gap=cap.top-copy.bottom,size=Math.max(120,Math.min(innerWidth*.6,320,gap*.8));
+ scene.style.width=size+'px';scene.style.top=((copy.bottom+gap/2-st.top)/st.height*100)+'%';
+}
+sizeJourney();addEventListener('resize',()=>{sizeJourney();fitHeroScene()});
 function jump(p){p=fromStory(p);window.scrollTo({top:journey.offsetTop+(journey.offsetHeight-stage.offsetHeight)*p,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
 function show(el,opacity,active=false){el.style.opacity=opacity;el.inert=!active;el.style.pointerEvents=active?'auto':'none'}
 const buttons=[];
@@ -65,7 +71,7 @@ function draw(p){
  sleeve.style.transform=`translateX(${-remove*125}%) rotateY(${-15-pull*8-remove*20}deg) rotateZ(${-7-remove*13}deg)`;sleeve.style.opacity=1-remove;
  record.style.transform=`translate(${28+pull*45-remove*73}%,${-4*(1-remove)}%) rotate(${-12+pull*70+remove*35}deg) scale(${1-spread*.7})`;record.style.opacity=1-ease((p-.35)/.08);
  scene.style.transform=`translate(calc(-50% + ${-remove*(mobile?-.05:.14)*stageW}px),calc(-50% + ${-remove*(mobile?.11:0)*stageH}px))`;
- {const cos=1-ease(p/.14);heroBg.style.opacity=cos;stage.classList.toggle('cosmic',cos>.5)}
+ {const cos=1-ease(p/.14);heroBg.style.opacity=cos;stage.classList.toggle('cosmic',cos>.5);journey.classList.toggle('cosmic-under',cos>.5)}
  intro.style.opacity=1-ease(p/.2);intro.style.transform=`translateY(${-pull*20}px)`;
  const gridVisible=ease((p-.35)/.05)*(1-form);show(collection,gridVisible,p>=.42&&p<.66);
  collectionTitle.style.opacity=1-select;demoNote.style.opacity=1-select;
@@ -97,6 +103,7 @@ function draw(p){
  navButtons.forEach((b,i)=>b.classList.toggle('active',i===(p<.4?0:p<.8?1:2)));
 }
 addEventListener('scroll',render,{passive:true});
+fitHeroScene();addEventListener('gm:headline',fitHeroScene);
 // Older Safari lacks overflow:clip; undo any focus-driven scroll of the pinned stage.
 stage.addEventListener('scroll',()=>{if(stage.scrollTop||stage.scrollLeft){stage.scrollTop=0;stage.scrollLeft=0}});addEventListener('resize',render);
 $('#exploreTracks').onclick=e=>{e.preventDefault();jump(.52)};
@@ -197,11 +204,11 @@ setArm(ARM_REST);
 // The shared host occasionally drops a request under load: retry an image once.
 document.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{if(!img.dataset.retried){img.dataset.retried=1;setTimeout(()=>{img.src=img.src.split('?')[0]+'?r='+Date.now()},700)}}));
 // Loading screen hand-off: the hero is ready once its sleeve and record are decoded and the
-// headline has its fonts, and the loader has shown for at least 3 s. Then "groove:ready" lets it fade out.
+// headline has its fonts, and the loader has shown for at least 4.5 s. Then "groove:ready" lets it fade out.
 Promise.all([
  ...['#sleeve img','#heroRecord img'].map(s=>{const i=$(s);return i.decode?i.decode().catch(()=>{}):Promise.resolve()}),
  new Promise(res=>$('#heroTitle').classList.contains('ready')?res():addEventListener('gm:headline',res,{once:true}))
-]).then(()=>setTimeout(()=>{window.__grooveReady=true;dispatchEvent(new Event('groove:ready'))},Math.max(0,3000-performance.now())));
+]).then(()=>setTimeout(()=>{window.__grooveReady=true;dispatchEvent(new Event('groove:ready'))},Math.max(0,4500-performance.now())));
 // Hero headline: each line rotates through its own fonts on its own rhythm
 // (expressive serifs above every 5 s, condensed sans below every 6 s, offset).
 // Every font is fitted to a shared footprint per line and the headline reserves

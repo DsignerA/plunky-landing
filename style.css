@@ -219,3 +219,12 @@ html,body{overflow-x:clip}
 .cosmic .big img,.cosmic .sleeve img{filter:none}
 .gm-glass{inset:86px 0 8.5%;border-top:0}
 @media(max-width:700px){.gm-glass{inset:65px 0 9.5%}}
+/* No hairlines over the cosmic hero: header border off, glass fills the screen edge to edge. */
+.stage>header{border-bottom:0}
+.gm-glass{inset:0;border:0;box-shadow:none}
+/* When Safari's toolbar collapses the viewport grows past the 100svh stage; keep what shows
+   beneath it the same navy as the hero (cream again once the record is pulled). */
+#journey{transition:background-color .4s ease}
+#journey.cosmic-under{background-color:#040d23}
+/* Phones with short screens: size the album by height so it never covers the intro copy. */
+@media(max-width:700px){.scene{width:min(60vw,34svh)}}
