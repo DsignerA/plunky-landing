@@ -1,10 +1,11 @@
-const { chromium } = require('/Users/macuser/find-the-signal/node_modules/playwright-core');
+const pw = require('/Users/macuser/find-the-signal/node_modules/playwright-core');
+const ENGINE = process.env.ENGINE || 'chromium';
 const OUT = process.env.SHOTS || "/tmp/gm-shots";
 const URL = process.env.URL || 'https://www.bisonboost.com/groovemakers-preview/';
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 async function run(name, viewport, opts = {}) {
-  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const browser = await pw[ENGINE].launch(ENGINE === 'chromium' ? { channel: 'chrome', headless: true } : { headless: true });
   const page = await browser.newPage({ viewport, reducedMotion: opts.reduced ? 'reduce' : 'no-preference', isMobile: !!opts.mobile, hasTouch: !!opts.mobile });
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
@@ -55,7 +56,7 @@ async function run(name, viewport, opts = {}) {
   // Unselected path: fresh page, jump to Join
   await page.reload({ waitUntil: 'networkidle' });
   await setP(0.9);
-  r.push({ step: 'join w/o track', needTrackOp: +(await page.evaluate(() => document.querySelector('#need-track').style.opacity)) });
+  r.push({ step: 'join w/o track (grid holds until a record is chosen)', gridStaysLive: await page.evaluate(() => +document.querySelector('#collection').style.opacity > .9 && document.querySelector('.track')._live === true) });
   await page.screenshot({ path: `${OUT}/${name}-needtrack.png` });
   console.log(JSON.stringify({ name, trackCount, visibleTracks, results: r, errors }, null, 1));
   await browser.close();

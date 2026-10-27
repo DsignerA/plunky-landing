@@ -12,7 +12,7 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 //  [intro]  hero pinned while the frosted glass builds (one screen; none with reduced motion)
 //  [story]  the original timeline, with some bands given extra scroll (in screens):
 //           the selected record on the turntable, and the Join carousel.
-const BANDS=[{a:.73,b:.79,screens:2.6},{a:.845,b:.92,screens:1.5}];
+const BANDS=[{a:.47,b:.6,screens:1.4},{a:.73,b:.79,screens:2.6},{a:.845,b:.92,screens:1.5}];
 let basePx=1,introPx=0,segs=[];
 function sizeJourney(){
  journey.style.height='';const H=stage.offsetHeight;basePx=journey.offsetHeight-H;
@@ -50,7 +50,8 @@ for(let i=1;i<=12;i++){
 // Scroll sets a target; drawn progress eases toward it each frame, which evens out
 // irregular mobile scroll events. Reduced motion draws the target directly.
 let shown=null,finalT=0,finalShown=0;
-const target=()=>storyAt(scrolled());
+const GRID_HOLD=.6;
+const target=()=>{const p=storyAt(scrolled());return chosen===null?Math.min(p,GRID_HOLD):p};
 // Frosted glass over the cosmic hero: blur and density follow raw scroll through the intro band.
 const heroBg=$('#heroBg');let lastFrost=-1;
 function drawFrost(){
