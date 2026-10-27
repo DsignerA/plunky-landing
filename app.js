@@ -197,11 +197,11 @@ setArm(ARM_REST);
 // The shared host occasionally drops a request under load: retry an image once.
 document.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{if(!img.dataset.retried){img.dataset.retried=1;setTimeout(()=>{img.src=img.src.split('?')[0]+'?r='+Date.now()},700)}}));
 // Loading screen hand-off: the hero is ready once its sleeve and record are decoded and the
-// headline has its fonts. Then "groove:ready" lets the loader fade out.
+// headline has its fonts, and the loader has shown for at least 3 s. Then "groove:ready" lets it fade out.
 Promise.all([
  ...['#sleeve img','#heroRecord img'].map(s=>{const i=$(s);return i.decode?i.decode().catch(()=>{}):Promise.resolve()}),
  new Promise(res=>$('#heroTitle').classList.contains('ready')?res():addEventListener('gm:headline',res,{once:true}))
-]).then(()=>{window.__grooveReady=true;dispatchEvent(new Event('groove:ready'))});
+]).then(()=>setTimeout(()=>{window.__grooveReady=true;dispatchEvent(new Event('groove:ready'))},Math.max(0,3000-performance.now())));
 // Hero headline: each line rotates through its own fonts on its own rhythm
 // (expressive serifs above every 5 s, condensed sans below every 6 s, offset).
 // Every font is fitted to a shared footprint per line and the headline reserves

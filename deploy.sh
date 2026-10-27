@@ -20,14 +20,14 @@ sed -E "s#src=\"spotlight[^\"]*\.html\"#src=\"$spot\"#; s#href=\"style[^\"]*\.cs
 grep -q "$css" "$DIST/index.html" && grep -q "$js" "$DIST/index.html"
 
 ts=$(date +%Y%m%d-%H%M%S)
-ssh $SSHO otaku "cd $REMOTE && mkdir -p ~/groovemakers-preview-backups/$ts && cp -p index.html ~/groovemakers-preview-backups/$ts/ && mkdir -p assets/spotlight assets/loader"
+ssh $SSHO otaku "cd $REMOTE && mkdir -p ~/groovemakers-preview-backups/$ts && cp -p index.html ~/groovemakers-preview-backups/$ts/ && mkdir -p assets/spotlight assets/loader-cosmic"
 scp $SSHO -q assets/*.webp otaku:$REMOTE/assets/
 scp $SSHO -q assets/spotlight/* otaku:$REMOTE/assets/spotlight/
-scp $SSHO -q assets/loader/* otaku:$REMOTE/assets/loader/
+scp $SSHO -q assets/loader-cosmic/* otaku:$REMOTE/assets/loader-cosmic/
 scp $SSHO -q "$DIST/$css" "$DIST/$js" otaku:$REMOTE/
 scp $SSHO -q "$DIST/index.html" otaku:$REMOTE/.index.html.new
 scp $SSHO -q "$DIST/$spot" otaku:$REMOTE/
-ssh $SSHO otaku "cd $REMOTE && chmod 755 assets/spotlight assets/loader && chmod 644 assets/loader/* $css $js assets/*.webp assets/spotlight/* .index.html.new $spot && mv -f .index.html.new index.html"
+ssh $SSHO otaku "cd $REMOTE && chmod 755 assets/spotlight assets/loader-cosmic && chmod 644 assets/loader-cosmic/* $css $js assets/*.webp assets/spotlight/* .index.html.new $spot && mv -f .index.html.new index.html"
 
 for f in "" "$css" "$js" "$spot"; do
   code=$(curl -s -o /dev/null -w "%{http_code}" "https://www.bisonboost.com/groovemakers-preview/$f")
