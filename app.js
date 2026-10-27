@@ -10,21 +10,27 @@ let chosen=null,queued=false,confirmed=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 // Scroll layout, in pixels of page scroll:
 //  [intro]  hero pinned while the frosted glass builds (one screen; none with reduced motion)
-//  [story]  the original timeline, with the Join carousel band (SA-SB) stretched to ~1.5 screens
-const SA=.845,SB=.92;let stretch=1,basePx=1,introPx=0,bandPx=0;
+//  [story]  the original timeline, with some bands given extra scroll (in screens):
+//           the selected record on the turntable, and the Join carousel.
+const BANDS=[{a:.73,b:.79,screens:2.6},{a:.845,b:.92,screens:1.5}];
+let basePx=1,introPx=0,segs=[];
 function sizeJourney(){
  journey.style.height='';const H=stage.offsetHeight;basePx=journey.offsetHeight-H;
- stretch=Math.max(1,1.5*H/((SB-SA)*basePx));bandPx=(SB-SA)*basePx*stretch;
  introPx=reduced.matches?0:H;
- journey.style.height=introPx+basePx+(SB-SA)*basePx*(stretch-1)+H+'px';
+ // segments of story p -> px length, with each band stretched to its screen count
+ segs=[];let p=0,px=introPx;
+ for(const bd of BANDS){segs.push({p0:p,p1:bd.a,px0:px,k:basePx});px+=(bd.a-p)*basePx;const k=Math.max(basePx,bd.screens*H/(bd.b-bd.a));segs.push({p0:bd.a,p1:bd.b,px0:px,k});px+=(bd.b-bd.a)*k;p=bd.b}
+ segs.push({p0:p,p1:1,px0:px,k:basePx});px+=(1-p)*basePx;
+ journey.style.height=px+H+'px';
 }
 const scrolled=()=>clamp(window.scrollY-journey.offsetTop,0,journey.offsetHeight-stage.offsetHeight);
 const frostAt=px=>introPx?clamp(px/introPx):1;
 function storyAt(px){
- const x=Math.max(0,px-introPx),a=SA*basePx;
- return clamp(x<a?x/basePx:x<a+bandPx?SA+(x-a)/(basePx*stretch):SB+(x-a-bandPx)/basePx);
+ if(px<=introPx)return 0;
+ for(const g of segs){const len=(g.p1-g.p0)*g.k;if(px<=g.px0+len)return clamp(g.p0+(px-g.px0)/g.k)}
+ return 1;
 }
-const storyToPx=p=>introPx+(p<SA?p*basePx:p<SB?SA*basePx+(p-SA)*basePx*stretch:SA*basePx+bandPx+(p-SB)*basePx);
+const storyToPx=p=>{for(const g of segs)if(p<=g.p1)return g.px0+(p-g.p0)*g.k;return segs[segs.length-1].px0+(1-segs[segs.length-1].p0)*basePx};
 const fromStory=p=>storyToPx(p)/(journey.offsetHeight-stage.offsetHeight);
 function fitHeroScene(){
  if(innerWidth>=701){scene.style.width=scene.style.top='';return}
@@ -39,7 +45,7 @@ const buttons=[];
 for(let i=1;i<=12;i++){
  const n=String(i).padStart(2,'0'),button=document.createElement('button');button.className='track';const title=titles[i-1],short=title.replace(' (45 Version Parts 1 & 2)',' (45)');button.setAttribute('aria-label',`Select track ${n}: ${title}`);
  button.innerHTML=`<div class="record photo"><img src="assets/vinyl-v2.webp" alt="" width="720" height="720" decoding="async"></div><div class="track-meta"><span><small>${n}</small>${short}</span><span>↗︎</span></div>`;
- button.onclick=()=>{chosen=i;confirmed=false;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';closeFinal();buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));stopDeck();jump(.76);render()};button.addEventListener('pointerdown',e=>{button._down=e.pointerType==='touch'?[e.clientX,e.clientY]:null});button.addEventListener('pointerup',e=>{const d=button._down;button._down=null;if(d&&Math.hypot(e.clientX-d[0],e.clientY-d[1])<10&&button._live){e.preventDefault();button._tapped=Date.now();button.onclick()}});button.addEventListener('click',e=>{if(Date.now()-(button._tapped||0)<600)e.stopImmediatePropagation()},true);tracks.append(button);button._meta=button.querySelector('.track-meta');buttons.push(button)
+ button.onclick=()=>{chosen=i;confirmed=false;$('#selectionTitle').textContent=`${title}.`;$('#selectionTitle').classList.toggle('long',title.length>20);$('#modalDescription').textContent=`Your starting point: ${n} · ${title}.`;$('#modalTitle').textContent='Make it yours.';closeFinal();buttons.forEach((b,j)=>b.classList.toggle('selected',j===i-1));stopDeck();jump(.76);render()};button.addEventListener('click',e=>{if(Date.now()-(button._tapped||0)<600)e.stopImmediatePropagation()},true);tracks.append(button);button._meta=button.querySelector('.track-meta');buttons.push(button)
 }
 // Scroll sets a target; drawn progress eases toward it each frame, which evens out
 // irregular mobile scroll events. Reduced motion draws the target directly.
@@ -103,6 +109,18 @@ function draw(p){
  navButtons.forEach((b,i)=>b.classList.toggle('active',i===(p<.4?0:p<.8?1:2)));
 }
 addEventListener('scroll',render,{passive:true});
+// Touch: pick the record under the finger on the first touch-up, judged on the real scroll
+// position (not the eased drawing), so a tap right after scrolling still selects.
+let touch0=null;
+stage.addEventListener('touchstart',e=>{const t=e.touches[0];touch0=e.touches.length===1?{x:t.clientX,y:t.clientY,at:Date.now()}:null},{passive:true});
+stage.addEventListener('touchend',e=>{
+ const t=e.changedTouches[0],d=touch0;touch0=null;
+ if(!d||Math.hypot(t.clientX-d.x,t.clientY-d.y)>12||Date.now()-d.at>700)return;
+ const p=target();if(p<.40||p>=.66)return;
+ const hit=buttons.find(b=>{const r=b.querySelector('.record').getBoundingClientRect();return Math.hypot(t.clientX-(r.left+r.width/2),t.clientY-(r.top+r.height/2))<=r.width/2+8||(()=>{const m=b._meta.getBoundingClientRect();return t.clientX>=m.left&&t.clientX<=m.right&&t.clientY>=m.top&&t.clientY<=m.bottom})()});
+ if(!hit)return;
+ e.preventDefault();hit._tapped=Date.now();hit.onclick();
+},{passive:false});
 fitHeroScene();addEventListener('gm:headline',fitHeroScene);
 // Older Safari lacks overflow:clip; undo any focus-driven scroll of the pinned stage.
 stage.addEventListener('scroll',()=>{if(stage.scrollTop||stage.scrollLeft){stage.scrollTop=0;stage.scrollLeft=0}});addEventListener('resize',render);
@@ -121,8 +139,8 @@ function startDeck(){
  if(chosen===null)return;
  deckOn=true;stage.classList.add('deck-on');$('#onDeck').hidden=false;$('#onDeckText').textContent=`${titles[chosen-1]} · on the turntable`;deckPlay.setAttribute('aria-pressed','true');deckPlay.setAttribute('aria-label','Stop this record');setArm(ARM_START);
  const src=audioSrc[chosen];
- if(src){player.src=src;player.currentTime=0;deckStatus.textContent=`Now playing: ${titles[chosen-1]}`;setTimeout(()=>{if(deckOn)player.play().catch(()=>{deckStatus.textContent='Tap play again to start the preview.'})},700)}
- else deckStatus.textContent=innerWidth<701?'Audio preview coming soon':`${titles[chosen-1]} · audio preview coming soon`;
+ if(src){player.src=src;player.currentTime=0;deckStatus.textContent='';setTimeout(()=>{if(deckOn)player.play().catch(()=>{deckStatus.textContent='Tap play again to start the preview.'})},700)}
+ else deckStatus.textContent='';
 }
 function stopDeck(){
  if(!deckOn)return;

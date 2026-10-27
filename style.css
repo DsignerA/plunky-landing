@@ -44,7 +44,7 @@
    no default blue link color or tap flash on iOS. */
 .track{transition:none}
 .track:focus:not(:focus-visible){outline:none}
-@media(hover:none){.track:hover{outline:none}.track:hover .record{transform:none}}
+
 .deck-shown .track{outline:none!important}
 button,a{-webkit-tap-highlight-color:transparent}
 .secondary{color:inherit;font-family:inherit}
@@ -236,3 +236,5 @@ html,body{overflow-x:clip}
  .chapter,.scrollcue,.progress,.scene-nav{translate:0 calc(-1 * var(--ui-lift))}
  @media(max-width:700px){.signup-panel.glass,.final-bar{translate:0 calc(-1 * var(--ui-lift))}}
 }
+
+.deck-status{display:none}
