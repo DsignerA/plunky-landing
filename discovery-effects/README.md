@@ -1,52 +1,42 @@
-# Groove Makers — discovery effects
+# Groove Makers: glass vinyl journey
 
-An additional discovery entry in the existing campaign, with the original select/join experience retained.
+New branch `groove-makers/glass-vinyl-journey`, extending the existing `groove-makers/white-aura` discovery implementation at `e59f9d9`. The original campaign entry, signup preview, assets and loader remain intact. Nothing is deployed by this branch.
 
-## Open and deploy
+## Run
 
-Serve the **whole campaign directory** over HTTP. Open `discovery-build/index.html`, or use the new Discover link in the original campaign header. The build is static and ready for cPanel; Node is needed only to edit/rebuild, never to host it. Keep the folder structure intact: Choose this track navigates to `../index.html?grooveTrack=1` (1–12). The original app validates that index and opens the corresponding selection.
+Serve the entire repository over HTTP and open `discovery-build/index.html`. The original campaign header already links to that entry. The checked-in build is static; cPanel does not need Node. Keep `assets/` alongside `discovery-build/` because the layered deck reuses campaign artwork.
 
-Source lives in `discovery-effects/`. With Node 24, run `npm ci`, `npm run test`, and `npm run build` there. The build writes to sibling `discovery-build/`. Versions and transitive dependencies are pinned in package-lock.json. In a development server scoped to `discovery-effects/`, the link back to the full campaign requires serving the parent campaign; use the complete packaged preview for that handoff.
+To edit: Node 24, `cd discovery-effects`, `npm ci`, `npm test`, `npm run build`. Build outputs sibling `discovery-build/`. On restricted machines use `npm ci --cache /tmp/groove-npm-cache`.
 
-## Choreography
+## The flow
 
-One reversible progress value drives the entire discovery. Press to begin advances it over 8.5 seconds; pause, scroll, vertical touch drag, or the native range can control it manually. Replay and Skip to records remain available.
+1. Press the floating sax key. Existing R3F procedural key is reused.
+2. Reveal a procedural saxophone with three refractive glass ribbons. This is an art-directed model, not an instrument scan.
+3. Original album covers fan out. The journey pauses until **Open African Rhythms** is chosen. The catalogue is not a claim that every album is challenge eligible.
+4. African Rhythms vinyl **slides out**, then **rolls into the next scene**, then **lands on the deck**, in that order. Separate reversible motion channels prevent all three actions from running together.
+5. Horizontal glass track strip replaces the giant radial dial. Twelve existing selected tracks, next/previous buttons, keyboard-accessible number buttons, swipeable rail and full track list.
+6. **Choose this track** opens the information form, retaining the track. Name, email, city/country, optional Instagram; native validation and editable review.
 
-| Progress | Action | Implementation |
-| --- | --- | --- |
-| 0–24% | Floating sax key, lever press | React Three Fiber, procedural geometry and real lever pivot |
-| 4–51% | Restrained cobalt/magenta/brass light | ShaderGradient, low pixel density; unmounted outside its interval |
-| 10–42% | Brief liquid-metal wordmark | Paper Shaders LiquidMetal with the existing Groove Makers logo |
-| 26–37% | Glass reflection of sleeve artwork | Exact linked liquid-glass-js implementation; desktop only |
-| 32–82% | Sleeves fan into depth and chosen sleeve settles | R3F meshes with existing unaltered artwork textures |
-| 78–98% | Record slides out from behind the sleeve | Same record mesh and continuous position; no replacement fade |
-| 91–100% | Glass selection bar appears | liquidGL; controls and text remain DOM content |
+The deck is for listening and choosing, **not recording, mixing or creation**. The current repository has no approved audio URLs or registration endpoint. Play is explicitly disabled and says “Audio preview not connected.” Form review explicitly says nothing is sent or saved. Connect these services before calling this a live registration experience. Form fields stay in memory only; chosen track is preserved in the URL for refresh, not personal information.
 
-The procedural sax key is an art-directed assembly (rod, posts, pivot, cup, pearl), not a scan of a particular saxophone. It supports actual rotation and a lever press; replace it with an approved GLB later for instrument-specific fidelity.
+## Materials and assets
 
-The three sleeves are the existing Groove Makers front/back and the actual African Rhythms sleeve. They are packaging and album views, not three invented albums. The 12 selectable songs use the existing catalog. There is no audio source in the current campaign: the UI explicitly labels this as motion preview, and Spin record controls visual rotation only.
+Deep black, clear/smoked glass and neutral silver deck. No radial dial or colored background aura. Existing deck/arm assets are desaturated; authentic green vinyl and album artwork retain their colors. Real cover images are copied unchanged from official artist/label Bandcamp pages. `public/assets/covers/Sources.json` records source page, CDN URL and SHA256 for each image. Six are displayed; the additional originals are included for future catalogue extension.
 
-## Exact library identity
+The fallback uses the approved no-text key concept and cropped sax/glass reference, plus authentic covers. Full 3D uses procedural geometry. Deck remains layered raster artwork, not a scanned 3D deck. The landing is a short coordinated 3D-to-layered-art crossfade; it is not a physically simulated needle or record.
 
-- React Three Fiber: @react-three/fiber 9.8.2, React/React DOM 19.3.1, Three 0.186.1.
-- ShaderGradient: @shadergradient/react 2.4.20.
-- Paper's Liquid Logo repository is an application, not a reusable npm logo component. This integration uses its underlying Paper Shaders LiquidMetal component, @paper-design/shaders-react 0.0.82, on our own existing logo.
-- The supplied Train-Case/liquid-glass-js URL redirects to JadenV15/liquid-glass-js. Its exact src/index.js is vendored under src/vendor/liquid-glass.js at commit b7402ac7b4c424167c682548f9513985abd7effb, with MIT license retained. The similarly named npm package belongs to another author and was removed.
-- liquidGL: liquid-gl 3.0.0 from naughtyduk/liquidGL. This is separate from both the shape library and Liquid Logo.
+R3F, Three, liquidGL and pinned existing dependencies are reused. Existing ShaderGradient, Paper LiquidMetal and vendored glass modules remain in the source, but the atmosphere effect is deliberately not mounted because this direction removes the colored aura. No replacement framework was added.
 
-Upstream licenses are retained in installed packages; the vendored source license is included in src/vendor. The MIT libraries are used as dependencies, not copied application branding.
+## Accessibility / controls
 
-## Performance and fallback
+Native buttons, labels, required/email validation, focus outlines and form/track heading focus. All 12 tracks have meaningful accessible names and selected states. Pause, replay, skip and manual progress remain available. Browser history handles Discover, Collection, Listen and Join. Hidden tabs stop animation; reduced motion jumps between phases. No WebGL2 uses the static-art fallback with all controls available.
 
-- Main scene uses a capped 1.5 device-pixel ratio, demand rendering after the reveal, and no idle record spin.
-- The aura, wordmark and prism appear only during their reveal intervals. The prism is omitted on coarse pointers; the persistent bar uses one glass treatment.
-- Hidden-tab handling stops the journey and pauses the scene; decorative shader components unmount. Replay resumes from the current progress value.
-- Reduced-motion mode disables autoplay, floating, spinning and decorative shaders. Users can jump to records or use the progress input. All selection controls remain available.
-- If WebGL2 is unavailable, an artwork composition replaces the scene; the native controls, track selection and continuation remain usable.
-- liquidGL captures the page; refraction of a live R3F canvas is **not guaranteed**. The bar is deliberately introduced after the main scene settles. No preserveDrawingBuffer workaround is enabled, and no claim of live 3D refraction is made.
+## Verification
 
-## Validation
+- Production build passed (Vite reports its existing large Three.js chunk and upstream `use client` warnings).
+- Five motion/catalog tests pass, including slide-before-roll-before-land, no aura, sax bridge, bounds and reverse seeking.
+- Existing campaign syntax, loader tests and 12-track selector tests pass.
+- Source regression tests cover the listening-only UI, track handoff URL, native form constraints and catalogue eligibility.
+- Browser execution was attempted but blocked: Chromium's process socket is denied in this execution sandbox; the alternate cloud browser blocks the local preview URL. No claim of mobile visual, GPU, keyboard interaction, glass capture or iPhone Safari QA is made. These remain required before deployment.
 
-Production build and motion/selection tests pass. The tests cover reversible progress, effect bounds, final record continuity, control ordering, and catalog clamping. The existing campaign's 12-track tuner test also passes.
-
-The cloud browser reports WebGL2 unavailable. Browser checks confirmed the fallback artwork, Skip, next-track selection, count/title update and selected-track URL. Continuation was verified to open the original campaign at Kazi with its correct count and Continue action. Full GPU effects, iPhone rendering, glass capture quality and frame pacing still require device testing. This build has not been published or pushed to GitHub.
+Nothing was merged or deployed. This branch is a reviewable implementation, not a live signup service.

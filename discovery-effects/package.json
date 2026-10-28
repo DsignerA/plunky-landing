@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "test": "node --test src/motion.test.mjs"
+    "test": "node --test src/*.test.mjs"
   },
   "dependencies": {
     "@paper-design/shaders-react": "0.0.82",
