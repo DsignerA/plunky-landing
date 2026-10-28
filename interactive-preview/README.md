@@ -10,11 +10,19 @@ The preview reuses the verified original sleeve, vinyl and acrylic turntable ass
 
 ## Artwork
 
-`preview-assets/key.webp` and `preview-assets/sax.webp` are the key and sax images from the ChatGPT preview package (`groove-two-scenes.zip`). The sax image is cropped to the instrument and glass ribbons; its drawn-in title, button and nav were removed so the page's real caption and button are the only ones shown.
+`preview-assets/sax.webp` is the sax image from the ChatGPT preview package, cropped to the instrument and glass ribbons so the page's real caption and button are the only ones shown.
+
+## 3D key and deck (`deck/`)
+
+- `sax_key_web.glb`: the first scene's 3D sax key (supplier README in `README-sax-key.txt`). Tap or Enter dips it, flashes it and sends ripple rings, then opens the sax scene.
+- `dj_rig_web.glb`: GM-001 turntable (supplier README in `README-dj-rig.txt`), with two fixes to the supplied file: the spin animation is an even 33 1/3 RPM (the original was eased and nearly stopped once per turn), and only the record spins (platter and spindle moved out of the animated `Spinner` node, same positions).
+- `rig-controls.js`: supplier start/stop and pitch controls, unchanged. `fader.js` slides the `Pitch_Fader` cap to match the pitch (uses model-viewer's internal scene; tested on 3.5.0).
+- The camera distance follows the viewer's aspect so the deck isn't cut off on phones.
+- model-viewer 3.5.0 loads from jsdelivr; its Draco decoder loads from gstatic.
 
 ## Glass button
 
-"Explore the collection" is a `.glass-cta`: `glass-cta.js` draws a WebGL glass pill behind the label with the vendored `vendor/liquid-glass.js` (MIT, see `vendor/liquid-glass-LICENSE`; Three.js 0.170.0 from jsdelivr via the page's import map). CSS adds the prismatic rim. Without WebGL the button keeps a CSS-only glass look. On bisonboost.com, deploy JS and images under content-hashed names because the CDN caches stale copies.
+"Explore the collection" is a `.glass-cta`, plain silver glass at rest with a prismatic rim only while pressed: `glass-cta.js` draws a WebGL glass pill behind the label with the vendored `vendor/liquid-glass.js` (MIT, see `vendor/liquid-glass-LICENSE`; Three.js 0.170.0 from jsdelivr via the page's import map). CSS adds the prismatic rim. Without WebGL the button keeps a CSS-only glass look. On bisonboost.com, deploy JS and images under content-hashed names because the CDN caches stale copies.
 
 The prototype includes: SVG-filter ripple on key press; key-to-sax navigation; sleeve gallery; draggable vinyl extraction; animated record on turntable; 12-track selector; and an **unconnected** registration form.
 

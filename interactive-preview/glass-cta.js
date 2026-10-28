@@ -6,20 +6,13 @@ import { drawLiquidRect } from './vendor/liquid-glass.js';
 const VIEW_H = 2 * Math.tan((25 / 2) * Math.PI / 180) * 2.35;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Dark backdrop with faint cyan/violet light at the ends for the glass to refract.
+// Plain dark backdrop for the glass to refract; color comes only from the pressed-state rim.
 function backdrop() {
   const c = document.createElement('canvas');
   c.width = c.height = 512;
   const g = c.getContext('2d');
   g.fillStyle = '#040406';
   g.fillRect(0, 0, 512, 512);
-  for (const [x, y, r, col] of [[60, 256, 90, '#2fb7ff'], [452, 256, 90, '#b06cff']]) {
-    const rg = g.createRadialGradient(x, y, 0, x, y, r);
-    rg.addColorStop(0, col + '22');
-    rg.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = rg;
-    g.fillRect(0, 0, 512, 512);
-  }
   return c.toDataURL('image/png');
 }
 
@@ -40,11 +33,14 @@ function mount(button, bg) {
     bgColor: '#040406',
     bgOpacity: 1,
     shape: pillShape(layer),
-    material: { color: '#ffffff', roughness: 0.02, ior: 1.5, thickness: 0.6, reflectivity: 0.3, clearcoat: 0, clearcoatRoughness: 0.04, iridescence: 0.65, iridescenceIOR: 1.35, iridescenceThicknessRange: [180, 640], attenuationColor: '#ffffff', attenuationDistance: 2 },
+    material: { color: '#ffffff', roughness: 0.02, ior: 1.3, thickness: 0.6, reflectivity: 0.08, clearcoat: 0, clearcoatRoughness: 0.04, iridescence: 0, iridescenceIOR: 1.35, iridescenceThicknessRange: [180, 640], attenuationColor: '#ffffff', attenuationDistance: 2 },
     background: { type: 'image', imageUrl: bg },
   });
   new ResizeObserver(() => glass.update({ shape: pillShape(layer) })).observe(button);
   button.classList.add('is-glass');
+  // Plain at rest; the prismatic rim lights up on a tap and fades out with the scene change.
+  let unlight = 0;
+  button.addEventListener('click', () => { button.classList.add('lit'); clearTimeout(unlight); unlight = setTimeout(() => button.classList.remove('lit'), 900); });
   if (reduced) return;
   // Tilt toward the pointer and dip on press: the glass catches new light without a render loop.
   let frame = 0, tilt = { x: 0, y: 0 }, press = 1;
