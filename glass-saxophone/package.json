@@ -1,0 +1,1 @@
+{"name":"groove-makers-glass-saxophone","version":"1.0.0","private":true,"type":"module","scripts":{"build":"esbuild src/main.js --bundle --minify --format=esm --outfile=dist/app.js --legal-comments=eof","dev":"python3 -m http.server 8000 --directory dist"},"dependencies":{"three":"0.180.0"},"devDependencies":{"esbuild":"0.25.11"}}
