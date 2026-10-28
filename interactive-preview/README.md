@@ -8,9 +8,13 @@ Run `git switch groove-makers/interactive-preview-20261028 && python3 -m http.se
 
 The preview reuses the verified original sleeve, vinyl and acrylic turntable assets already in `assets/`.
 
-## Required key/sax image imports
+## Artwork
 
-The exact uploaded images from ChatGPT are not yet checked into this branch. To enable the first two scenes, copy `key.webp` and `sax.webp` from the downloadable Groove Makers preview package into `interactive-preview/preview-assets/`. The prototype shows a plain-text fallback if either is unavailable.
+`preview-assets/key.webp` and `preview-assets/sax.webp` are the key and sax images from the ChatGPT preview package (`groove-two-scenes.zip`). The sax image is cropped to the instrument and glass ribbons; its drawn-in title, button and nav were removed so the page's real caption and button are the only ones shown.
+
+## Glass button
+
+"Explore the collection" is a `.glass-cta`: `glass-cta.js` draws a WebGL glass pill behind the label with the vendored `vendor/liquid-glass.js` (MIT, see `vendor/liquid-glass-LICENSE`; Three.js 0.170.0 from jsdelivr via the page's import map). CSS adds the prismatic rim. Without WebGL the button keeps a CSS-only glass look. On bisonboost.com, deploy JS and images under content-hashed names because the CDN caches stale copies.
 
 The prototype includes: SVG-filter ripple on key press; key-to-sax navigation; sleeve gallery; draggable vinyl extraction; animated record on turntable; 12-track selector; and an **unconnected** registration form.
 
