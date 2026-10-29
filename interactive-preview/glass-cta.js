@@ -57,6 +57,7 @@ function mount(button, bg) {
 }
 
 const bg = backdrop();
-for (const button of document.querySelectorAll('.glass-cta')) {
+// .glass-lite buttons (Back/Next) keep the CSS-only glass.
+for (const button of document.querySelectorAll('.glass-cta:not(.glass-lite)')) {
   try { mount(button, bg); } catch (err) { console.warn('glass-cta: CSS fallback', err); }
 }
