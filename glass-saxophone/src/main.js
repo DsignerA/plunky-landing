@@ -127,23 +127,61 @@ for(let i=0;i<4;i++){sphere([-.51,2.9+i*.15,.13],.04);}
 const strap=torus([-.45,.6,-.24],.095,.022);strap.rotation.y=.4;
 sax.position.y=.15;
 
-// Beveled closed rectangular annuli: genuine volume, including their inner walls.
-function roundedPath(shape,w,h,r,reverse=false){
-  const x=-w/2,y=-h/2;
-  if(!reverse){shape.moveTo(x+r,y);shape.lineTo(x+w-r,y);shape.quadraticCurveTo(x+w,y,x+w,y+r);shape.lineTo(x+w,y+h-r);shape.quadraticCurveTo(x+w,y+h,x+w-r,y+h);shape.lineTo(x+r,y+h);shape.quadraticCurveTo(x,y+h,x,y+h-r);shape.lineTo(x,y+r);shape.quadraticCurveTo(x,y,x+r,y);}
-  else{shape.moveTo(x+r,y);shape.quadraticCurveTo(x,y,x,y+r);shape.lineTo(x,y+h-r);shape.quadraticCurveTo(x,y+h,x+r,y+h);shape.lineTo(x+w-r,y+h);shape.quadraticCurveTo(x+w,y+h,x+w,y+h-r);shape.lineTo(x+w,y+r);shape.quadraticCurveTo(x+w,y,x+w-r,y);shape.lineTo(x+r,y);}
-  return shape;
+// Crystal bands: closed rectangular glass frames with straight chamfered corners and flat-bevelled
+// edges (faceted, not rounded), tall thick walls, tilted down to the right like the reference art.
+const BAND={w:5.7,d:1.6,wall:.36,height:.42,corner:.3,bevel:.08};
+function chamferPath(path,w,h,c,reverse=false){
+  const x=w/2,y=h/2,pts=[[-x+c,-y],[x-c,-y],[x,-y+c],[x,y-c],[x-c,y],[-x+c,y],[-x,y-c],[-x,-y+c]];
+  if(reverse)pts.reverse();
+  path.moveTo(...pts[0]);for(const q of pts.slice(1))path.lineTo(...q);path.closePath();return path;
 }
-const shape=roundedPath(new THREE.Shape(),5.50,2.70,.36);
-shape.holes.push(roundedPath(new THREE.Path(),5.16,2.36,.24,true));
-const glassGeometry=new THREE.ExtrudeGeometry(shape,{depth:.32,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:.055,bevelThickness:.055,curveSegments:16});
+const shape=chamferPath(new THREE.Shape(),BAND.w,BAND.d,BAND.corner);
+shape.holes.push(chamferPath(new THREE.Path(),BAND.w-2*BAND.wall,BAND.d-2*BAND.wall,BAND.corner*.55,true));
+const glassGeometry=new THREE.ExtrudeGeometry(shape,{depth:BAND.height,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:BAND.bevel,bevelThickness:BAND.bevel,curveSegments:1});
 glassGeometry.center();glassGeometry.rotateX(Math.PI/2);
-const glassMaterial=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.025,transmission:1,opacity:1,ior:1.52,thickness:.34,dispersion:1.0,attenuationColor:0xffffff,attenuationDistance:Infinity,envMapIntensity:1.6,clearcoat:1,clearcoatRoughness:.02});
+// Glass-only studio: many bright strip lights (warm, cool and white) so every facet catches a highlight.
+// The visible background stays black; the gold keeps the original studio.
+const glassStudio=new THREE.Scene();glassStudio.background=new THREE.Color(0x05060a);
+// soft fall-off so flat faces show a gradient, not a solid block of light
+const falloff=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d'),r=g.createRadialGradient(64,64,4,64,64,64);r.addColorStop(0,'#fff');r.addColorStop(.45,'#bbb');r.addColorStop(1,'#000');g.fillStyle=r;g.fillRect(0,0,128,128);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;})();
+const strip=(x,y,z,w,h,color,power,soft=false)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,map:soft?falloff:null}));m.material.color.multiplyScalar(power);m.position.set(x,y,z);m.lookAt(0,0,0);glassStudio.add(m);};
+strip(-6,2,4,1.2,12,0xffffff,14);strip(6,1,3,.8,12,0xffffff,12);strip(0,8,2,10,1.4,0xffffff,12);
+strip(0,-7,3,10,1,0xdfe9ff,8);strip(-4,-1,-6,.7,9,0x8fb8ff,9);strip(5,-1,-5,.7,9,0xffb15a,9);
+strip(3,5,-5,6,.6,0xffe6c0,8);strip(-6,-4,1,.6,6,0xff9a3c,7);strip(2,-3,7,.5,6,0x9cc4ff,7);
+// large softboxes: the broad glow the glass shows in the reference
+// saturated warm/cool strips toward the band ends: the rainbow fringes
+strip(-7,0,2,.35,8,0xff6a1a,10);strip(-7,1,-1,.35,8,0x2f7bff,10);strip(7,0,1,.35,8,0xff8a2a,10);strip(7,-1,-2,.35,8,0x3a8cff,10);strip(-3,6,4,5,.3,0xb06bff,8);strip(3,-6,4,5,.3,0xffb030,8);
+strip(-5,4,6,7,7,0xffffff,7,true);strip(6,3,5,6,8,0xfff1de,6,true);strip(0,-5,6,9,4,0xe8f0ff,5,true);strip(0,4,-7,10,5,0xdde8ff,5,true);
+const glassPmrem=new THREE.PMREMGenerator(renderer);const glassEnv=glassPmrem.fromScene(glassStudio,0,.1,50).texture;glassPmrem.dispose();
+const glassMaterial=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0,transmission:1,opacity:1,ior:1.55,thickness:.6,dispersion:3,
+  attenuationColor:0xffffff,attenuationDistance:Infinity,envMap:glassEnv,envMapIntensity:2.4,specularIntensity:1,
+  iridescence:.85,iridescenceIOR:1.8,iridescenceThicknessRange:[250,900]});
+// Real-time transmission doesn't bounce light inside the glass, so the bands would refract black.
+// This additive back-face layer stands in for those internal reflections: inner faces mirror the
+// strip-light studio, black stays black wherever nothing reflects.
+const innerLight=new THREE.MeshPhysicalMaterial({color:0x8a8a8a,metalness:1,roughness:.08,envMap:glassEnv,envMapIntensity:1,
+  iridescence:.6,iridescenceIOR:1.8,iridescenceThicknessRange:[250,900],side:THREE.BackSide,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
+// Edge glow: the reference's bright, colour-fringed bevels. Faces seen edge-on (bevels, band ends,
+// inner walls) light up white with an amber/blue tint; faces seen square-on keep only a faint grey fill.
+const edgeGlow=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
+  uniforms:{fill:{value:.08},power:{value:2.1},gain:{value:1.5}},
+  vertexShader:`varying vec3 vN;varying vec3 vV;varying vec3 vP;
+    void main(){vec4 w=modelMatrix*vec4(position,1.);vN=normalize(mat3(modelMatrix)*normal);vV=normalize(cameraPosition-w.xyz);vP=position;gl_Position=projectionMatrix*viewMatrix*w;}`,
+  fragmentShader:`uniform float fill,power,gain;varying vec3 vN;varying vec3 vV;varying vec3 vP;
+    void main(){float f=pow(1.-abs(dot(normalize(vN),normalize(vV))),power);
+      // dispersion-like fringe: warm amber against cool blue, as in the reference (no greens)
+      float s=.5+.5*sin(f*7.+vP.x*1.1);
+      vec3 spec=mix(vec3(1.,.55,.18),vec3(.35,.6,1.),s);
+      vec3 c=mix(vec3(1.),spec,.5*smoothstep(.15,.6,f));
+      gl_FragColor=vec4(c*(fill+gain*f),1.);}`});
 const bands=new THREE.Group();sculpture.add(bands);
-for(let i=0;i<3;i++){
+const bandLayout=[{x:-.25,y:2.1,rz:-.4},{x:.05,y:.05,rz:-.37},{x:.3,y:-1.95,rz:-.39}];
+for(const L of bandLayout){
   const ring=mesh(glassGeometry,glassMaterial,bands);
-  ring.position.set(.05,1.55-i*2.0,0);
-  ring.rotation.set(.08+i*.02,.08,-.19);
+  ring.position.set(L.x,L.y,0);
+  ring.rotation.set(.28,.22,L.rz);
+  const inner=mesh(glassGeometry,innerLight,ring);inner.renderOrder=1;
+  const glow=mesh(glassGeometry,edgeGlow,ring);glow.renderOrder=2;
 }
 sculpture.rotation.y=-.16;
 
