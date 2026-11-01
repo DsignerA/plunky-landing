@@ -19,3 +19,19 @@ Firefox ignores an import map that appears after a module script has started loa
 never resolved and the poster/record/glass CTA did not render — black screen.
 Fix: the `<script type="importmap">` now comes before the model-viewer module script.
 Keep it first in `<head>` in any future build.
+
+## No-3D fallback (2026-10-31)
+
+Browsers that can't create a WebGL2 context (old GPUs, hardware acceleration off,
+some locked-down machines) used to get a black screen. Now:
+
+- An inline probe at the top of `<body>` adds `body.nogl` before any 3D script runs;
+  `poster-record.cf73e245.js` also falls back if the renderer fails to start.
+- Poster: plain GROOVE / MAKERS type, the small poster type slides in, and the
+  invitation card still appears (darker, since there is no blurred 3D scene behind it).
+- Turntable: the 2D acrylic deck from the first preview (commit 7ea6bbb:
+  `assets/acrylic/deck.webp`, `assets/vinyl-v2.webp`, `assets/acrylic/tonearm.webp`)
+  replaces the model-viewer deck. It spins on the existing `rigchange` event, follows pitch.
+- The gallery already fell back to the flat album cards.
+
+Test with 3D off: Firefox pref `webgl.disabled=true`, or Chromium `--disable-3d-apis`.
